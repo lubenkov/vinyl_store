@@ -2,6 +2,7 @@ import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { PurchaseService } from './purchase.service';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
+import { CreatePurchaseDto } from './dto/create-purchase.dto';
 
 @ApiTags('purchases')
 @Controller('purchases')
@@ -13,11 +14,11 @@ export class PurchaseController {
     async createPurchase(
         @Req() req: any,
         @Body()
-        createPurchaseDto: { vinylId: number; amount: number; currency: string }
+        createPurchaseDto: CreatePurchaseDto
     ) {
         const userId = req.user.userId;
         const { vinylId, amount, currency } = createPurchaseDto;
-        return this.purchaseService.createPurchase(
+        return await this.purchaseService.createPurchase(
             userId,
             vinylId,
             amount,

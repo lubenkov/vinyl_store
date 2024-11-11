@@ -25,7 +25,7 @@ export class PurchaseService {
     ): Promise<Purchase> {
         const user = await this.userService.getProfile(userId.toString());
         const paymentIntent = await this.stripeService.createPaymentIntent(
-            amount,
+            amount * 100,
             currency
         );
 
@@ -39,7 +39,7 @@ export class PurchaseService {
         await this.emailService.sendPaymentConfirmation(user.email, amount);
 
         const purchaseData = JSON.stringify(purchase.dataValues);
-        await this.logService.createLog(`Update vinyl: ${purchaseData}`);
+        await this.logService.createLog(`Create purchase: ${purchaseData}`);
 
         return purchase;
     }
