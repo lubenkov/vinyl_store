@@ -72,4 +72,20 @@ export class ConfigServiceImpl {
     get googleCallbackUrl(): string {
         return this.configService.get<string>('GOOGLE_CALLBACK_URL', '');
     }
+
+    get telegramBotToken(): string {
+        return this.configService.get<string>('TELEGRAM_BOT_TOKEN', '');
+    }
+
+    get telegramChatId(): string {
+        return this.configService.get<string>('TELEGRAM_CHAT_ID', '');
+    }
+
+    get discogsKey(): string {
+        return this.configService.get<string>('DISCOGS_KEY', '');
+    }
+
+    get discogsSecret(): string {
+        return this.configService.get<string>('DISCOGS_SECRET', '');
+    }
 }

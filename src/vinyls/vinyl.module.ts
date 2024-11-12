@@ -20,5 +20,6 @@ import { ReviewModule } from '../reviews/review.module';
     ],
     providers: [VinylService],
     controllers: [VinylController],
+    exports: [VinylService],
 })
 export class VinylModule {}

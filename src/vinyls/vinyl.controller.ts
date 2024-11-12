@@ -27,6 +27,9 @@ export class VinylController {
 
     @Get()
     async findAll(@Query() paginationDto: PaginationDto) {
+        paginationDto.limit = Number(paginationDto.limit);
+        paginationDto.offset = Number(paginationDto.offset);
+
         return this.vinylService.findAll(paginationDto);
     }
 

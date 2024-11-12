@@ -10,7 +10,7 @@ export class Log extends Model {
     id: number;
 
     @Column({
-        type: DataType.STRING,
+        type: DataType.TEXT,
         allowNull: false,
     })
     action: string;

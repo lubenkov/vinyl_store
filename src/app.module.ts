@@ -11,6 +11,8 @@ import { StripeService } from './purchases/stripe.service';
 import { PurchaseModule } from './purchases/purchase.module';
 import { ReviewModule } from './reviews/review.module';
 import { LogModule } from './logs/log.module';
+import { DiscogsModule } from './discogs/discogs.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
     imports: [
@@ -22,6 +24,8 @@ import { LogModule } from './logs/log.module';
         ReviewModule,
         AppConfigModule,
         LogModule,
+        DiscogsModule,
+        TelegramModule,
     ],
     controllers: [HealthController],
     providers: [EmailService, StripeService],
