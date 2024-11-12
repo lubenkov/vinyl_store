@@ -6,7 +6,7 @@ import { AdminGuard } from '../../src/common/guards/admin.guard';
 import { AuthGuard } from '../../src/common/guards/auth.guard';
 import { DiscogsService } from '../../src/discogs/discogs.service';
 
-describe('TelegramController (integration)', () => {
+describe('DiscogsController (integration)', () => {
     let app: INestApplication;
     let discogsService: DiscogsService;
 
