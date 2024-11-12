@@ -21,7 +21,7 @@ export class VinylService {
     async findAll(
         paginationDto: PaginationDto
     ): Promise<{ rows: Vinyl[]; count: number }> {
-        const {
+        let {
             limit = 10,
             offset = 0,
             sortBy = 'name',
@@ -29,6 +29,8 @@ export class VinylService {
             searchBy,
             searchTerm,
         } = paginationDto;
+        limit = Number(limit);
+        offset = Number(offset);
         const whereClause =
             searchBy && searchTerm
                 ? { [searchBy]: { [Op.like]: `%${searchTerm}%` } }

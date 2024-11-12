@@ -1,17 +1,7 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Req,
-    UseGuards,
-    Body,
-    Res,
-} from '@nestjs/common';
+import { Controller, Get, Req, UseGuards, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -19,10 +9,12 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Get('google')
+    @ApiOperation({ summary: 'Initiate Google OAuth authentication' })
     @UseGuards(AuthGuard('google'))
     async googleAuth(@Req() req: any) {}
 
     @Get('google/callback')
+    @ApiOperation({ summary: 'Handle Google OAuth callback and generate JWT' })
     @UseGuards(AuthGuard('google'))
     async googleAuthRedirect(@Req() req: any, @Res() res: any) {
         const user = req.user;
@@ -30,7 +22,11 @@ export class AuthController {
         res.cookie('jwt', jwt);
         res.redirect('/users/profile');
     }
-    @Get('logout') async logout(@Req() req: any, @Res() res: any) {
+    @Get('logout')
+    @ApiOperation({
+        summary: 'Log out the current user by clearing the JWT cookie',
+    })
+    async logout(@Req() req: any, @Res() res: any) {
         res.clearCookie('jwt');
         res.redirect('/');
     }

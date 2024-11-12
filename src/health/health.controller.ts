@@ -1,5 +1,5 @@
 import { Controller, Get, Res } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import fs from 'fs';
 
@@ -8,7 +8,6 @@ import fs from 'fs';
 export class HealthController {
     @Get()
     @ApiOperation({ summary: 'Check service health' })
-    @ApiResponse({ status: 200, description: 'Service is healthy' })
     check(@Res() res: Response) {
         let packageName = 'unknown';
         let packageVersion = 'unknown';
