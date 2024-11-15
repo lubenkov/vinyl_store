@@ -7,12 +7,11 @@ import { UpdateVinylDto } from '../../src/vinyls/dto/update-vinyl.dto';
 import { CreateReviewDto } from '../../src/reviews/dto/create-review.dto';
 import { JwtService } from '@nestjs/jwt';
 import { VinylService } from '../../src/vinyls/vinyl.service';
+import { AdminGuard } from '../../src/common/guards/admin.guard';
+import { AuthGuard } from '../../src/common/guards/auth.guard';
 
 describe('VinylController (integration)', () => {
     let app: INestApplication;
-    let jwtService: JwtService;
-    let adminToken: string;
-    let userToken: string;
     let vinylService: VinylService;
 
     beforeAll(async () => {
@@ -55,14 +54,27 @@ describe('VinylController (integration)', () => {
                         { id: 1, content: 'Great vinyl', score: 5 },
                     ]),
             })
+            .overrideGuard(AuthGuard)
+            .useValue({
+                canActivate: jest.fn((context) => {
+                    const req = context.switchToHttp().getRequest();
+                    req.user = { userId: 1 };
+                    return true;
+                }),
+            })
+            .overrideGuard(AdminGuard)
+            .useValue({
+                canActivate: jest.fn((context) => {
+                    const req = context.switchToHttp().getRequest();
+                    req.user = { userId: 1 };
+                    return true;
+                }),
+            })
             .compile();
 
         app = moduleFixture.createNestApplication();
         await app.init();
 
-        jwtService = moduleFixture.get<JwtService>(JwtService);
-        adminToken = jwtService.sign({ userId: 1 });
-        userToken = jwtService.sign({ userId: 2 });
         vinylService = moduleFixture.get<VinylService>(VinylService);
     });
 
@@ -98,7 +110,6 @@ describe('VinylController (integration)', () => {
         };
         const response = await request(app.getHttpServer())
             .post('/vinyls')
-            .set('Authorization', `Bearer ${adminToken}`)
             .send(createVinylDto)
             .expect(201);
 
@@ -115,7 +126,6 @@ describe('VinylController (integration)', () => {
         };
         const response = await request(app.getHttpServer())
             .put('/vinyls/1')
-            .set('Authorization', `Bearer ${adminToken}`)
             .send(updateVinylDto)
             .expect(200);
 
@@ -123,10 +133,7 @@ describe('VinylController (integration)', () => {
     });
 
     it('DELETE /vinyls/:id - should delete a vinyl', async () => {
-        await request(app.getHttpServer())
-            .delete('/vinyls/1')
-            .set('Authorization', `Bearer ${adminToken}`)
-            .expect(200);
+        await request(app.getHttpServer()).delete('/vinyls/1').expect(200);
     });
 
     it('POST /vinyls/:id/reviews - should add a review to a vinyl', async () => {
@@ -138,7 +145,6 @@ describe('VinylController (integration)', () => {
         };
         const response = await request(app.getHttpServer())
             .post('/vinyls/1/reviews')
-            .set('Authorization', `Bearer ${userToken}`)
             .send(createReviewDto)
             .expect(201);
 

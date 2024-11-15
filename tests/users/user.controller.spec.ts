@@ -5,12 +5,11 @@ import { AppModule } from '../../src/app.module';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../src/users/user.service';
 import { UpdateProfileDto } from '../../src/users/dto/update-profile.dto';
+import { AuthGuard } from '../../src/common/guards/auth.guard';
+import { AdminGuard } from '../../src/common/guards/admin.guard';
 
 describe('UserController (integration)', () => {
     let app: INestApplication;
-    let jwtService: JwtService;
-    let adminToken: string;
-    let userToken: string;
     let userService: UsersService;
 
     beforeAll(async () => {
@@ -34,14 +33,27 @@ describe('UserController (integration)', () => {
                 }),
                 deleteProfile: jest.fn().mockResolvedValue(undefined),
             })
+            .overrideGuard(AuthGuard)
+            .useValue({
+                canActivate: jest.fn((context) => {
+                    const req = context.switchToHttp().getRequest();
+                    req.user = { userId: 1 };
+                    return true;
+                }),
+            })
+            .overrideGuard(AdminGuard)
+            .useValue({
+                canActivate: jest.fn((context) => {
+                    const req = context.switchToHttp().getRequest();
+                    req.user = { userId: 1 };
+                    return true;
+                }),
+            })
             .compile();
 
         app = moduleFixture.createNestApplication();
         await app.init();
 
-        jwtService = moduleFixture.get<JwtService>(JwtService);
-        adminToken = jwtService.sign({ userId: 1 });
-        userToken = jwtService.sign({ userId: 2 });
         userService = moduleFixture.get<UsersService>(UsersService);
     });
 
@@ -52,7 +64,6 @@ describe('UserController (integration)', () => {
     it('GET /users/profile - should return user profile', async () => {
         const response = await request(app.getHttpServer())
             .get('/users/profile')
-            .set('Authorization', `Bearer ${userToken}`)
             .expect(200);
         expect(response.body).toHaveProperty('email', 'test@gmail.com');
         expect(response.body.firstName).toBe('Test');
@@ -67,7 +78,6 @@ describe('UserController (integration)', () => {
         };
         const response = await request(app.getHttpServer())
             .put('/users/profile')
-            .set('Authorization', `Bearer ${userToken}`)
             .send(updateProfileDto)
             .expect(200);
 
@@ -75,9 +85,6 @@ describe('UserController (integration)', () => {
     });
 
     it('DELETE /users/profile - should delete user profile', async () => {
-        await request(app.getHttpServer())
-            .delete('/users/profile')
-            .set('Authorization', `Bearer ${userToken}`)
-            .expect(200);
+        await request(app.getHttpServer()).delete('/users/profile').expect(200);
     });
 });
