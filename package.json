@@ -6,7 +6,8 @@
         "test": "jest",
         "lint": "eslint . --ext .js,.ts,.tsx",
         "format": "prettier --write .",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "start": "nest start"
     },
     "keywords": [],
     "author": "",
