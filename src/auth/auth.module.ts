@@ -5,11 +5,10 @@ import { UsersModule } from '../users/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtAuthModule } from '../jwt.module';
 import { GoogleStrategy } from './google.strategy';
-import { ConfigServiceImpl } from '../config/config.service';
 
 @Module({
     imports: [UsersModule, PassportModule, JwtAuthModule],
-    providers: [AuthService, GoogleStrategy, ConfigServiceImpl],
+    providers: [AuthService, GoogleStrategy],
     controllers: [AuthController],
 })
 export class AuthModule {}

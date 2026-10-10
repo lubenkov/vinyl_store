@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+    Injectable,
+    CanActivate,
+    ExecutionContext,
+    UnauthorizedException,
+    ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../users/user.service';
 import { Request } from 'express';
@@ -16,22 +22,24 @@ export class AdminGuard implements CanActivate {
         const token = authHeader && authHeader.split(' ')[1];
 
         if (!token) {
-            return false;
+            throw new UnauthorizedException('Access token is missing');
         }
 
+        let payload: { userId: number };
         try {
-            const payload = this.jwtService.verify(token);
-            const userId = payload.userId;
-
-            (request as any).user = payload;
-
-            const user = await this.userService.getProfile(userId);
-
-            if (user.role !== 'admin') return false;
-
-            return true;
+            payload = this.jwtService.verify(token);
         } catch {
-            return false;
+            throw new UnauthorizedException('Invalid or expired access token');
         }
+
+        (request as any).user = payload;
+
+        const user = await this.userService.getProfile(String(payload.userId));
+
+        if (user.role !== 'admin') {
+            throw new ForbiddenException('Admin access is required');
+        }
+
+        return true;
     }
 }

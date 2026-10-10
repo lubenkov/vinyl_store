@@ -1,21 +1,22 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Global, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { ConfigServiceImpl } from './config.service';
 
+@Global()
 @Module({
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
             validationSchema: Joi.object({
                 DATABASE_HOST: Joi.string().required(),
-                DATABASE_PORT: Joi.number().default(5432),
+                // MySQL default port (the old value 5432 is PostgreSQL's).
+                DATABASE_PORT: Joi.number().default(3306),
                 DATABASE_USER: Joi.string().required(),
                 DATABASE_PASSWORD: Joi.string().required(),
                 DATABASE_NAME: Joi.string().required(),
                 JWT_SECRET: Joi.string().required(),
                 STRIPE_SECRET_KEY: Joi.string().required(),
-                STRIPE_VERSION: Joi.string().required(),
                 EMAIL_SERVICE: Joi.string().required(),
                 EMAIL_USER: Joi.string().required(),
                 EMAIL_PASS: Joi.string().required(),

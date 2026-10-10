@@ -14,7 +14,6 @@ import { AppConfigModule } from './config/config.module';
             }),
         }),
     ],
-    providers: [ConfigServiceImpl],
     exports: [JwtModule],
 })
 export class JwtAuthModule {}

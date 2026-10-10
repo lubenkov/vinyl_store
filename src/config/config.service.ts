@@ -10,7 +10,7 @@ export class ConfigServiceImpl {
     }
 
     get databasePort(): number {
-        return this.configService.get<number>('DATABASE_PORT', 5432);
+        return this.configService.get<number>('DATABASE_PORT', 3306);
     }
 
     get databaseUser(): string {
@@ -22,28 +22,15 @@ export class ConfigServiceImpl {
     }
 
     get databaseName(): string {
-        return this.configService.get<string>('DATABASE_NAME', 'test');
+        return this.configService.get<string>('DATABASE_NAME', 'vinyl_store');
     }
 
     get jwtSecret(): string {
-        return this.configService.get<string>(
-            'JWT_SECRET',
-            'default_jwt_secret'
-        );
+        return this.configService.get<string>('JWT_SECRET')!;
     }
 
     get stripeSecretKey(): string {
-        return this.configService.get<string>(
-            'STRIPE_SECRET_KEY',
-            'default_stripe_key'
-        );
-    }
-
-    get stripeVersion(): string {
-        return this.configService.get<string>(
-            'STRIPE_VERSION',
-            'default_version'
-        );
+        return this.configService.get<string>('STRIPE_SECRET_KEY')!;
     }
 
     get emailService(): string {
@@ -51,41 +38,38 @@ export class ConfigServiceImpl {
     }
 
     get emailUser(): string {
-        return this.configService.get<string>(
-            'EMAIL_USER',
-            'example@gmail.com'
-        );
+        return this.configService.get<string>('EMAIL_USER')!;
     }
 
     get emailPass(): string {
-        return this.configService.get<string>('EMAIL_PASS', '');
+        return this.configService.get<string>('EMAIL_PASS')!;
     }
 
     get googleClientId(): string {
-        return this.configService.get<string>('GOOGLE_CLIENT_ID', '');
+        return this.configService.get<string>('GOOGLE_CLIENT_ID')!;
     }
 
     get googleClientSecret(): string {
-        return this.configService.get<string>('GOOGLE_CLIENT_SECRET', '');
+        return this.configService.get<string>('GOOGLE_CLIENT_SECRET')!;
     }
 
     get googleCallbackUrl(): string {
-        return this.configService.get<string>('GOOGLE_CALLBACK_URL', '');
+        return this.configService.get<string>('GOOGLE_CALLBACK_URL')!;
     }
 
     get telegramBotToken(): string {
-        return this.configService.get<string>('TELEGRAM_BOT_TOKEN', '');
+        return this.configService.get<string>('TELEGRAM_BOT_TOKEN')!;
     }
 
     get telegramChatId(): string {
-        return this.configService.get<string>('TELEGRAM_CHAT_ID', '');
+        return this.configService.get<string>('TELEGRAM_CHAT_ID')!;
     }
 
     get discogsKey(): string {
-        return this.configService.get<string>('DISCOGS_KEY', '');
+        return this.configService.get<string>('DISCOGS_KEY')!;
     }
 
     get discogsSecret(): string {
-        return this.configService.get<string>('DISCOGS_SECRET', '');
+        return this.configService.get<string>('DISCOGS_SECRET')!;
     }
 }

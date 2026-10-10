@@ -1,13 +1,18 @@
 import {
     Injectable,
     NotFoundException,
-    UnauthorizedException,
+    ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import * as bcrypt from 'bcryptjs';
 import { User } from '../models/user.model';
+import { Review } from '../models/review.model';
+import { Purchase } from '../models/purchase.model';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LogService } from '../logs/log.service';
+
+const BCRYPT_SALT_ROUNDS = 10;
 
 @Injectable()
 export class UsersService {
@@ -20,7 +25,9 @@ export class UsersService {
     async getProfile(userId: string): Promise<User> {
         const user = await this.userModel.findOne({
             where: { id: userId },
-            include: ['reviews', 'purchases'],
+            // The password hash must never be sent to a client.
+            attributes: { exclude: ['password'] },
+            include: [{ model: Review }, { model: Purchase }],
         });
         if (!user) {
             throw new NotFoundException('User not found');
@@ -29,9 +36,28 @@ export class UsersService {
     }
 
     async registerUser(registerDto: RegisterDto): Promise<User> {
-        const user = await this.userModel.create({ ...registerDto });
-        const userData = JSON.stringify(user.dataValues);
-        await this.logService.createLog(`Update user: ${userData}`);
+        const existingUser = await this.userModel.findOne({
+            where: { email: registerDto.email },
+        });
+        if (existingUser) {
+            throw new ConflictException('User with this email already exists');
+        }
+
+        const newUserData: RegisterDto = { ...registerDto };
+        if (newUserData.password) {
+            newUserData.password = await bcrypt.hash(
+                newUserData.password,
+                BCRYPT_SALT_ROUNDS
+            );
+        }
+
+        const user = await this.userModel.create({ ...newUserData });
+
+        const userData = { ...user.dataValues };
+        delete userData.password;
+        await this.logService.createLog(
+            `Register user: ${JSON.stringify(userData)}`
+        );
 
         return user;
     }
@@ -40,7 +66,7 @@ export class UsersService {
         userId: string,
         updateProfileDto: UpdateProfileDto
     ): Promise<User> {
-        const [numberOfAffectedRows] = await this.userModel.update(
+        await this.userModel.update(
             { ...updateProfileDto },
             {
                 where: { id: userId },
@@ -49,6 +75,7 @@ export class UsersService {
 
         const updatedUser = await this.userModel.findOne({
             where: { id: userId },
+            attributes: { exclude: ['password'] },
         });
 
         if (!updatedUser) {
@@ -56,7 +83,7 @@ export class UsersService {
         }
 
         const userData = JSON.stringify(updatedUser.dataValues);
-        await this.logService.createLog(`Update vinyl: ${userData}`);
+        await this.logService.createLog(`Update user: ${userData}`);
 
         return updatedUser;
     }
