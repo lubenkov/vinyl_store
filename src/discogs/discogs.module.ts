@@ -5,7 +5,6 @@ import { DiscogsController } from '../discogs/discogs.controller';
 import { VinylModule } from '../vinyls/vinyl.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Vinyl } from '../models/vinyl.model';
-import { ConfigServiceImpl } from '../config/config.service';
 import { JwtAuthModule } from '../jwt.module';
 import { UsersModule } from '../users/user.module';
 
@@ -17,7 +16,7 @@ import { UsersModule } from '../users/user.module';
         JwtAuthModule,
         UsersModule,
     ],
-    providers: [DiscogsService, ConfigServiceImpl],
+    providers: [DiscogsService],
     controllers: [DiscogsController],
 })
 export class DiscogsModule {}

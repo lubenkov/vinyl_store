@@ -7,9 +7,7 @@ export class StripeService {
     private stripe: Stripe;
 
     constructor(private configService: ConfigServiceImpl) {
-        this.stripe = new Stripe(this.configService.stripeSecretKey, {
-            apiVersion: '2024-10-28.acacia',
-        });
+        this.stripe = new Stripe(this.configService.stripeSecretKey);
     }
 
     async createPaymentIntent(
@@ -23,7 +21,7 @@ export class StripeService {
             });
 
             return paymentIntent;
-        } catch (error) {
+        } catch {
             throw new InternalServerErrorException(
                 'Error creating payment intent'
             );

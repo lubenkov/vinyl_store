@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { VinylService } from './vinyl.service';
 import { VinylController } from './vinyl.controller';
-import { AuthModule } from '../auth/auth.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { JwtAuthModule } from '../jwt.module';
 import { Vinyl } from '../models/vinyl.model';

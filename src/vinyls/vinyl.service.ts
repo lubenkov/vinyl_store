@@ -1,13 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { Vinyl } from '../models/vinyl.model';
+import { Review } from '../models/review.model';
 import { CreateVinylDto } from './dto/create-vinyl.dto';
 import { UpdateVinylDto } from './dto/update-vinyl.dto';
-import { Review } from '../models/review.model';
 import { PaginationDto } from './dto/pagination.dto';
-import { Op } from 'sequelize';
+import { CreateReviewDto } from '../reviews/dto/create-review.dto';
 import { LogService } from '../logs/log.service';
 import { ReviewService } from '../reviews/review.service';
+
+const SORTABLE_COLUMNS = ['id', 'name', 'author', 'price'];
+const SEARCHABLE_COLUMNS = ['name', 'author'];
+
+const escapeLikeTerm = (term: string): string =>
+    term.replace(/[\\%_]/g, '\\$&');
 
 @Injectable()
 export class VinylService {
@@ -21,20 +28,24 @@ export class VinylService {
     async findAll(
         paginationDto: PaginationDto
     ): Promise<{ rows: Vinyl[]; count: number }> {
-        let {
-            limit = 10,
-            offset = 0,
-            sortBy = 'name',
-            order = 'ASC',
-            searchBy,
-            searchTerm,
-        } = paginationDto;
-        limit = Number(limit);
-        offset = Number(offset);
-        const whereClause =
-            searchBy && searchTerm
-                ? { [searchBy]: { [Op.like]: `%${searchTerm}%` } }
-                : {};
+        const { limit = 10, offset = 0, searchBy, searchTerm } = paginationDto;
+
+        const requestedSortBy = paginationDto.sortBy ?? '';
+        const sortBy = SORTABLE_COLUMNS.includes(requestedSortBy)
+            ? requestedSortBy
+            : 'name';
+        const order = paginationDto.order === 'DESC' ? 'DESC' : 'ASC';
+
+        const whereClause = (
+            searchBy && searchTerm && SEARCHABLE_COLUMNS.includes(searchBy)
+                ? {
+                      [searchBy]: {
+                          [Op.like]: `%${escapeLikeTerm(searchTerm)}%`,
+                      },
+                  }
+                : {}
+        ) as WhereOptions;
+
         return this.vinylModel.findAndCountAll({
             limit,
             offset,
@@ -63,7 +74,7 @@ export class VinylService {
     }
 
     async update(id: number, updateVinylDto: UpdateVinylDto): Promise<Vinyl> {
-        const [numberOfAffectedRows] = await this.vinylModel.update(
+        await this.vinylModel.update(
             { ...updateVinylDto },
             {
                 where: { id },
@@ -97,12 +108,15 @@ export class VinylService {
     async addReview(
         vinylId: number,
         userId: number,
-        createReviewDto: any
+        createReviewDto: CreateReviewDto
     ): Promise<Review> {
-        createReviewDto.vinylId = vinylId;
-        createReviewDto.userId = userId;
-        return await this.reviewService.createReview(createReviewDto);
+        return await this.reviewService.createReview({
+            ...createReviewDto,
+            userId,
+            vinylId,
+        });
     }
+
     async getReviews(
         vinylId: number,
         page: number,

@@ -21,7 +21,7 @@ describe('HealthController (integration)', () => {
 
     it('/health (GET)', async () => {
         const packageJson = {
-            name: 'final_project',
+            name: 'vinyl-store',
             version: '1.0.0',
         };
 

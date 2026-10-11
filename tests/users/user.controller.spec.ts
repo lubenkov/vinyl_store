@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../src/users/user.service';
 import { UpdateProfileDto } from '../../src/users/dto/update-profile.dto';
 import { AuthGuard } from '../../src/common/guards/auth.guard';
@@ -10,7 +9,7 @@ import { AdminGuard } from '../../src/common/guards/admin.guard';
 
 describe('UserController (integration)', () => {
     let app: INestApplication;
-    let userService: UsersService;
+    let userService: any;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -65,6 +64,7 @@ describe('UserController (integration)', () => {
         const response = await request(app.getHttpServer())
             .get('/users/profile')
             .expect(200);
+        expect(userService.getProfile).toHaveBeenCalledWith(1);
         expect(response.body).toHaveProperty('email', 'test@gmail.com');
         expect(response.body.firstName).toBe('Test');
     });

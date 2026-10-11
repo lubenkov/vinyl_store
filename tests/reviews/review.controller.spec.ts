@@ -8,7 +8,7 @@ import { AuthGuard } from '../../src/common/guards/auth.guard';
 
 describe('ReviewController (integration)', () => {
     let app: INestApplication;
-    let reviewService: ReviewService;
+    let reviewService: any;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -34,7 +34,8 @@ describe('ReviewController (integration)', () => {
         await app.close();
     });
 
-    it('DELETE /reviews/:id - should delete a review', async () => {
+    it('DELETE /reviews/1 - should delete a review', async () => {
         await request(app.getHttpServer()).delete('/reviews/1').expect(200);
+        expect(reviewService.deleteReview).toHaveBeenCalledWith(1);
     });
 });

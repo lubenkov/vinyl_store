@@ -8,28 +8,30 @@ import { DiscogsService } from '../../src/discogs/discogs.service';
 
 describe('DiscogsController (integration)', () => {
     let app: INestApplication;
-    let discogsService: DiscogsService;
+    let discogsService: any;
 
     beforeAll(async () => {
+        discogsService = {
+            getVinylRecords: jest.fn().mockResolvedValue({
+                name: 'test',
+            }),
+            getVinylRecordById: jest.fn().mockResolvedValue({
+                name: 'test',
+            }),
+            getVinylRecordByIdWithScores: jest.fn().mockResolvedValue({
+                name: 'test',
+                score: 5,
+            }),
+            fetchAndSaveVinylRecord: jest.fn().mockResolvedValue({
+                name: 'test',
+            }),
+        };
+
         const moduleFixture: TestingModule = await Test.createTestingModule({
             imports: [AppModule],
         })
             .overrideProvider(DiscogsService)
-            .useValue({
-                getVinylRecords: jest.fn().mockResolvedValue({
-                    name: 'test',
-                }),
-                getVinylRecordById: jest.fn().mockResolvedValue({
-                    name: 'test',
-                }),
-                getVinylRecordByIdWithScores: jest.fn().mockResolvedValue({
-                    name: 'test',
-                    score: 5,
-                }),
-                fetchAndSaveVinylRecord: jest.fn().mockResolvedValue({
-                    name: 'test',
-                }),
-            })
+            .useValue(discogsService)
             .overrideGuard(AuthGuard)
             .useValue({
                 canActivate: jest.fn((context) => {
@@ -50,8 +52,6 @@ describe('DiscogsController (integration)', () => {
 
         app = moduleFixture.createNestApplication();
         await app.init();
-
-        discogsService = moduleFixture.get<DiscogsService>(DiscogsService);
     });
 
     afterAll(async () => {
@@ -68,17 +68,18 @@ describe('DiscogsController (integration)', () => {
         });
     });
 
-    it('GET /discogs/vinyls/:id - should return a vinyl by id from Discogs', async () => {
+    it('GET /discogs/vinyls/1 - should return a vinyl by id from Discogs', async () => {
         const response = await request(app.getHttpServer())
             .get('/discogs/vinyls/1')
             .expect(200);
 
+        expect(discogsService.getVinylRecordById).toHaveBeenCalledWith(1);
         expect(response.body).toMatchObject({
             name: 'test',
         });
     });
 
-    it('GET /discogs/vinyls/:id/scores - should return a vinyl by id with score from Discogs', async () => {
+    it('GET /discogs/vinyls/1/scores - should return a vinyl by id with score from Discogs', async () => {
         const response = await request(app.getHttpServer())
             .get('/discogs/vinyls/1/scores')
             .expect(200);
@@ -89,11 +90,12 @@ describe('DiscogsController (integration)', () => {
         });
     });
 
-    it('POST /discogs/vinyls/:id - should fetch a vinyl record from Discogs by id and save it to the database', async () => {
+    it('POST /discogs/vinyls/1 - should fetch a vinyl record from Discogs by id and save it to the database', async () => {
         const response = await request(app.getHttpServer())
-            .post('/discogs/vinyls/:id')
+            .post('/discogs/vinyls/1')
             .expect(201);
 
+        expect(discogsService.fetchAndSaveVinylRecord).toHaveBeenCalledWith(1);
         expect(response.body).toMatchObject({
             name: 'test',
         });

@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Review } from '../models/review.model';
-import { NotFoundException } from '@nestjs/common';
+import { CreateReviewDto } from './dto/create-review.dto';
 import { LogService } from '../logs/log.service';
 
 @Injectable()
@@ -12,8 +12,10 @@ export class ReviewService {
         private logService: LogService
     ) {}
 
-    async createReview(createReviewDto: any): Promise<Review> {
-        const review = await this.reviewModel.create(createReviewDto);
+    async createReview(
+        createReviewDto: CreateReviewDto & { userId: number; vinylId: number }
+    ): Promise<Review> {
+        const review = await this.reviewModel.create({ ...createReviewDto });
 
         const reviewData = JSON.stringify(review.dataValues);
         await this.logService.createLog(`Create review: ${reviewData}`);

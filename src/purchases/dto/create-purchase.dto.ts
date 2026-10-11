@@ -1,15 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, IsString } from 'class-validator';
 
 export class CreatePurchaseDto {
     @ApiProperty()
+    @Type(() => Number)
     @IsInt()
     vinylId: number;
-
-    @ApiProperty()
-    @IsInt()
-    @Min(1)
-    amount: number;
 
     @ApiProperty()
     @IsString()

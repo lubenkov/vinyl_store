@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    UseGuards,
+} from '@nestjs/common';
 import { DiscogsService } from './discogs.service';
 import { CreateVinylDto } from '../vinyls/dto/create-vinyl.dto';
 import { Vinyl } from '../models/vinyl.model';
@@ -20,7 +27,9 @@ export class DiscogsController {
     @ApiOperation({
         summary: 'Retrieve a vinyl record by its ID from Discogs',
     })
-    async getVinylRecordById(@Param('id') id: number): Promise<CreateVinylDto> {
+    async getVinylRecordById(
+        @Param('id', ParseIntPipe) id: number
+    ): Promise<CreateVinylDto> {
         return this.discogsService.getVinylRecordById(id);
     }
 
@@ -29,8 +38,8 @@ export class DiscogsController {
         summary: 'Retrieve a vinyl record and its score by its ID from Discogs',
     })
     async getVinylRecordByIdWithScores(
-        @Param('id') id: number
-    ): Promise<CreateVinylDto> {
+        @Param('id', ParseIntPipe) id: number
+    ): Promise<CreateVinylDto & { score: number | string }> {
         return this.discogsService.getVinylRecordByIdWithScores(id);
     }
 
@@ -40,7 +49,9 @@ export class DiscogsController {
             'Fetch a vinyl record by its ID from Discogs and save it to the database',
     })
     @UseGuards(AdminGuard)
-    async fetchAndSaveVinylRecord(@Param('id') id: number): Promise<Vinyl> {
+    async fetchAndSaveVinylRecord(
+        @Param('id', ParseIntPipe) id: number
+    ): Promise<Vinyl> {
         return this.discogsService.fetchAndSaveVinylRecord(id);
     }
 }

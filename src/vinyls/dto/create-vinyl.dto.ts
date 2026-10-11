@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNumber, IsPositive, IsString } from 'class-validator';
 
 export class CreateVinylDto {
     @ApiProperty()
@@ -15,7 +16,9 @@ export class CreateVinylDto {
     description: string;
 
     @ApiProperty()
+    @Type(() => Number)
     @IsNumber()
+    @IsPositive()
     price: number;
 
     @ApiProperty()

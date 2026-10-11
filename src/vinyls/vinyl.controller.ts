@@ -9,6 +9,8 @@ import {
     Query,
     UseGuards,
     Req,
+    ParseIntPipe,
+    DefaultValuePipe,
 } from '@nestjs/common';
 import { VinylService } from './vinyl.service';
 import { CreateVinylDto } from './dto/create-vinyl.dto';
@@ -35,7 +37,7 @@ export class VinylController {
 
     @Get(':id')
     @ApiOperation({ summary: 'Retrieve a specific vinyl record by its ID' })
-    async findOne(@Param('id') id: number) {
+    async findOne(@Param('id', ParseIntPipe) id: number) {
         return this.vinylService.findOne(id);
     }
 
@@ -50,7 +52,7 @@ export class VinylController {
     @ApiOperation({ summary: 'Update an existing vinyl record by its ID' })
     @UseGuards(AdminGuard)
     async update(
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
         @Body() updateVinylDto: UpdateVinylDto
     ) {
         return this.vinylService.update(id, updateVinylDto);
@@ -59,7 +61,7 @@ export class VinylController {
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a specific vinyl record by its ID' })
     @UseGuards(AdminGuard)
-    async delete(@Param('id') id: number) {
+    async delete(@Param('id', ParseIntPipe) id: number) {
         return this.vinylService.delete(id);
     }
 
@@ -67,14 +69,16 @@ export class VinylController {
     @ApiOperation({ summary: 'Create a review for a specific vinyl record' })
     @UseGuards(AuthGuard)
     async createReview(
-        @Param('id') vinylId: number,
+        @Param('id', ParseIntPipe) vinylId: number,
         @Body() createReviewDto: CreateReviewDto,
         @Req() req: any
     ): Promise<Review> {
         const userId = req.user.userId;
-        return await this.vinylService.addReview(vinylId, userId, {
-            ...createReviewDto,
-        });
+        return await this.vinylService.addReview(
+            vinylId,
+            userId,
+            createReviewDto
+        );
     }
 
     @Get(':id/reviews')
@@ -82,9 +86,9 @@ export class VinylController {
         summary: 'Retrieve all reviews for a specific vinyl record',
     })
     async getReviews(
-        @Param('id') vinylId: number,
-        @Query('page') page: number = 1,
-        @Query('limit') limit: number = 10
+        @Param('id', ParseIntPipe) vinylId: number,
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
     ): Promise<Review[]> {
         return await this.vinylService.getReviews(vinylId, page, limit);
     }

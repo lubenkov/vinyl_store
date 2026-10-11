@@ -1,16 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DiscogsService } from '../../src/discogs/discogs.service';
 import { HttpService } from '@nestjs/axios';
-import { VinylService } from '../../src/vinyls/vinyl.service';
 import { of } from 'rxjs';
+import { DiscogsService } from '../../src/discogs/discogs.service';
+import { VinylService } from '../../src/vinyls/vinyl.service';
 import { ConfigServiceImpl } from '../../src/config/config.service';
 import { CreateVinylDto } from '../../src/vinyls/dto/create-vinyl.dto';
 
 describe('DiscogsService', () => {
     let service: DiscogsService;
-    let httpService: HttpService;
-    let vinylService: VinylService;
-    let configService: ConfigServiceImpl;
+    let httpService: any;
+    let vinylService: any;
 
     beforeEach(async () => {
         const httpServiceMock = {
@@ -38,7 +37,6 @@ describe('DiscogsService', () => {
         service = module.get<DiscogsService>(DiscogsService);
         httpService = module.get<HttpService>(HttpService);
         vinylService = module.get<VinylService>(VinylService);
-        configService = module.get<ConfigServiceImpl>(ConfigServiceImpl);
     });
 
     it('should be defined', () => {
@@ -68,11 +66,13 @@ describe('DiscogsService', () => {
             jest.spyOn(service, 'getVinylRecordById').mockResolvedValue(
                 fetchedVinyl
             );
+            vinylService.create.mockResolvedValue({ id: 1, ...fetchedVinyl });
 
             const result = await service.fetchAndSaveVinylRecord(1);
 
             expect(service.getVinylRecordById).toHaveBeenCalledWith(1);
             expect(vinylService.create).toHaveBeenCalledWith(fetchedVinyl);
+            expect(result).toEqual({ id: 1, ...fetchedVinyl });
         });
     });
 });

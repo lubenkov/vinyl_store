@@ -1,4 +1,10 @@
-import { Controller, Delete, Param, UseGuards } from '@nestjs/common';
+import {
+    Controller,
+    Delete,
+    Param,
+    ParseIntPipe,
+    UseGuards,
+} from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -11,7 +17,7 @@ export class ReviewController {
     @Delete(':id')
     @ApiOperation({ summary: 'Delete a specific review by its ID' })
     @UseGuards(AdminGuard)
-    async delete(@Param('id') id: number): Promise<void> {
+    async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
         return await this.reviewService.deleteReview(id);
     }
 }

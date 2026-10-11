@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersService } from '../../src/users/user.service';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/sequelize';
+import * as bcrypt from 'bcryptjs';
+import { UsersService } from '../../src/users/user.service';
 import { User } from '../../src/models/user.model';
+import { Review } from '../../src/models/review.model';
+import { Purchase } from '../../src/models/purchase.model';
 import { LogService } from '../../src/logs/log.service';
-import { NotFoundException } from '@nestjs/common';
 import { RegisterDto } from '../../src/users/dto/register.dto';
 import { UpdateProfileDto } from '../../src/users/dto/update-profile.dto';
 
@@ -46,7 +49,7 @@ describe('UsersService', () => {
     });
 
     describe('getProfile', () => {
-        it('should return user profile', async () => {
+        it('should return user profile without the password hash', async () => {
             const user = { id: '1', name: 'Test User' };
             userModel.findOne.mockResolvedValue(user);
 
@@ -55,7 +58,8 @@ describe('UsersService', () => {
             expect(result).toEqual(user);
             expect(userModel.findOne).toHaveBeenCalledWith({
                 where: { id: '1' },
-                include: ['reviews', 'purchases'],
+                attributes: { exclude: ['password'] },
+                include: [{ model: Review }, { model: Purchase }],
             });
         });
 
@@ -69,19 +73,20 @@ describe('UsersService', () => {
     });
 
     describe('registerUser', () => {
-        it('should register a new user', async () => {
-            const registerDto: RegisterDto = {
-                firstName: 'Test',
-                lastName: 'User',
-                email: 'test@gmail.com',
-            };
+        const registerDto: RegisterDto = {
+            firstName: 'Test',
+            lastName: 'User',
+            email: 'test@gmail.com',
+        };
 
+        it('should register a new user and log the action', async () => {
             const createdUser = {
                 ...registerDto,
                 id: '1',
                 dataValues: { ...registerDto, id: '1' },
             };
 
+            userModel.findOne.mockResolvedValue(null);
             userModel.create.mockResolvedValue(createdUser);
 
             const result = await service.registerUser(registerDto);
@@ -89,8 +94,60 @@ describe('UsersService', () => {
             expect(result).toEqual(createdUser);
             expect(userModel.create).toHaveBeenCalledWith(registerDto);
             expect(logService.createLog).toHaveBeenCalledWith(
-                `Update user: ${JSON.stringify(createdUser.dataValues)}`
+                `Register user: ${JSON.stringify(createdUser.dataValues)}`
             );
+        });
+
+        it('should throw ConflictException for a duplicate email', async () => {
+            userModel.findOne.mockResolvedValue({ id: '1' });
+
+            await expect(service.registerUser(registerDto)).rejects.toThrow(
+                ConflictException
+            );
+            expect(userModel.create).not.toHaveBeenCalled();
+        });
+
+        it('should store the password as a bcrypt hash', async () => {
+            const dtoWithPassword: RegisterDto = {
+                ...registerDto,
+                password: 'password123',
+            };
+            userModel.findOne.mockResolvedValue(null);
+            userModel.create.mockImplementation(async (data: any) => ({
+                ...data,
+                id: '1',
+                dataValues: { ...data, id: '1' },
+            }));
+
+            await service.registerUser(dtoWithPassword);
+
+            const savedUser = userModel.create.mock.calls[0][0];
+            expect(savedUser.password).not.toBe(dtoWithPassword.password);
+            expect(
+                await bcrypt.compare(
+                    dtoWithPassword.password!,
+                    savedUser.password
+                )
+            ).toBe(true);
+        });
+
+        it('should never write the password hash to the log', async () => {
+            const dtoWithPassword: RegisterDto = {
+                ...registerDto,
+                password: 'password123',
+            };
+            userModel.findOne.mockResolvedValue(null);
+            userModel.create.mockImplementation(async (data: any) => ({
+                ...data,
+                id: '1',
+                dataValues: { ...data, id: '1' },
+            }));
+
+            await service.registerUser(dtoWithPassword);
+
+            const loggedAction = logService.createLog.mock.calls[0][0];
+            expect(loggedAction).toContain('Register user:');
+            expect(loggedAction).not.toContain('password');
         });
     });
 
@@ -119,7 +176,7 @@ describe('UsersService', () => {
                 where: { id: '1' },
             });
             expect(logService.createLog).toHaveBeenCalledWith(
-                `Update vinyl: ${JSON.stringify(updatedUser.dataValues)}`
+                `Update user: ${JSON.stringify(updatedUser.dataValues)}`
             );
         });
 

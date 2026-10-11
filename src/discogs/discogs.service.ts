@@ -9,14 +9,17 @@ import { ConfigServiceImpl } from '../config/config.service';
 @Injectable()
 export class DiscogsService {
     private readonly BASE_URL = 'https://api.discogs.com';
-    private readonly KEY = this.configService.discogsKey;
-    private readonly SECRET = this.configService.discogsSecret;
+    private readonly KEY: string;
+    private readonly SECRET: string;
 
     constructor(
         private httpService: HttpService,
         private vinylService: VinylService,
         private configService: ConfigServiceImpl
-    ) {}
+    ) {
+        this.KEY = this.configService.discogsKey;
+        this.SECRET = this.configService.discogsSecret;
+    }
 
     async getVinylRecords(): Promise<any> {
         const url = `${this.BASE_URL}/database/search?type=release&key=${this.KEY}&secret=${this.SECRET}`;
@@ -32,8 +35,8 @@ export class DiscogsService {
             const vinylRecord = {
                 name: data.title,
                 author: data.artists
-                    .map((artist: any) => artist.name)
-                    .join(', '),
+                    ? data.artists.map((artist: any) => artist.name).join(', ')
+                    : 'Unknown artist',
                 description: data.notes || 'No description available',
                 price: data.lowest_price || 0,
                 image:
@@ -54,7 +57,9 @@ export class DiscogsService {
         }
     }
 
-    async getVinylRecordByIdWithScores(id: number): Promise<CreateVinylDto> {
+    async getVinylRecordByIdWithScores(
+        id: number
+    ): Promise<CreateVinylDto & { score: number | string }> {
         const url = `${this.BASE_URL}/releases/${id}?key=${this.KEY}&secret=${this.SECRET}`;
 
         try {
@@ -63,8 +68,8 @@ export class DiscogsService {
             const vinylRecord = {
                 name: data.title,
                 author: data.artists
-                    .map((artist: any) => artist.name)
-                    .join(', '),
+                    ? data.artists.map((artist: any) => artist.name).join(', ')
+                    : 'Unknown artist',
                 description: data.notes || 'No description available',
                 price: data.lowest_price || 0,
                 image:
@@ -91,7 +96,6 @@ export class DiscogsService {
 
     async fetchAndSaveVinylRecord(id: number): Promise<Vinyl> {
         const fetchedVinyl = await this.getVinylRecordById(id);
-        const vinyl = this.vinylService.create(fetchedVinyl);
-        return vinyl;
+        return await this.vinylService.create(fetchedVinyl);
     }
 }

@@ -1,29 +1,32 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class UpdateVinylDto {
-    @ApiProperty()
-    @IsString()
+    @ApiPropertyOptional()
     @IsOptional()
-    name: string;
-
-    @ApiProperty()
     @IsString()
-    @IsOptional()
-    author: string;
+    name?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    @IsOptional()
-    description: string;
+    author?: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    description?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Type(() => Number)
     @IsNumber()
-    @IsOptional()
-    price: number;
+    @IsPositive()
+    price?: number;
 
-    @ApiProperty()
-    @IsString()
+    @ApiPropertyOptional()
     @IsOptional()
-    image: string;
+    @IsString()
+    image?: string;
 }

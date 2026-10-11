@@ -1,2 +1,3 @@
-{"level":"info","message":"Server listening at http://localhost:3000","timestamp":"2026-10-10T17:34:45.906Z"}
-{"level":"info","message":"Server listening at http://localhost:3000","timestamp":"2026-10-10T18:33:28.260Z"}
+{"level":"error","message":"Error sending payment confirmation for purchase 1: Error: SMTP is down","timestamp":"2026-10-11T12:49:38.765Z"}
+{"level":"error","message":"Error sending payment confirmation for purchase 1: Error: SMTP is down","timestamp":"2026-10-11T12:56:40.551Z"}
+{"level":"error","message":"Error sending payment confirmation for purchase 1: Error: SMTP is down","timestamp":"2026-10-11T13:01:35.382Z"}

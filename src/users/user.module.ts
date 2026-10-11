@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { UsersService } from './user.service';
 import { UsersController } from './user.controller';
 import { SequelizeModule } from '@nestjs/sequelize';

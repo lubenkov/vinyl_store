@@ -8,7 +8,7 @@ import { TelegramService } from '../../src/telegram/telegram.service';
 
 describe('TelegramController (integration)', () => {
     let app: INestApplication;
-    let telegramService: TelegramService;
+    let telegramService: any;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -59,6 +59,7 @@ describe('TelegramController (integration)', () => {
             .send(vinyl)
             .expect(201);
 
+        expect(telegramService.sendVinylRecord).toHaveBeenCalledWith(vinyl);
         expect(response.body).toMatchObject({
             ok: true,
         });

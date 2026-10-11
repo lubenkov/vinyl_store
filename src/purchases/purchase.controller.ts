@@ -14,15 +14,13 @@ export class PurchaseController {
     @ApiOperation({ summary: 'Create a new purchase for a vinyl record' })
     async createPurchase(
         @Req() req: any,
-        @Body()
-        createPurchaseDto: CreatePurchaseDto
+        @Body() createPurchaseDto: CreatePurchaseDto
     ) {
         const userId = req.user.userId;
-        const { vinylId, amount, currency } = createPurchaseDto;
+        const { vinylId, currency } = createPurchaseDto;
         return await this.purchaseService.createPurchase(
             userId,
             vinylId,
-            amount,
             currency
         );
     }

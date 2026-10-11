@@ -150,7 +150,7 @@ module.exports = {
         });
     },
 
-    async down(queryInterface, Sequelize) {
+    async down(queryInterface) {
         await queryInterface.dropTable('reviews');
         await queryInterface.dropTable('purchases');
         await queryInterface.dropTable('vinyls');
