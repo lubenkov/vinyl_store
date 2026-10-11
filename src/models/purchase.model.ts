@@ -9,7 +9,7 @@ import {
 import { User } from './user.model';
 import { Vinyl } from './vinyl.model';
 
-@Table({ timestamps: false })
+@Table({ tableName: 'purchases', timestamps: false })
 export class Purchase extends Model {
     @Column({
         type: DataType.INTEGER,

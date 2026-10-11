@@ -2,7 +2,7 @@ import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
 import { Review } from './review.model';
 import { Purchase } from './purchase.model';
 
-@Table({ timestamps: false })
+@Table({ tableName: 'users', timestamps: false })
 export class User extends Model {
     @Column({
         type: DataType.INTEGER,
