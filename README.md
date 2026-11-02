@@ -101,18 +101,18 @@ The API is served at `http://localhost:3000`, Swagger UI at `http://localhost:30
 
 ## Environment variables
 
-| Variable                                                          | Description                                    |
-| :---------------------------------------------------------------- | :--------------------------------------------- |
-| `PORT`                                                            | HTTP port, `3000` by default                   |
-| `DATABASE_HOST`, `DATABASE_PORT`                                  | MySQL host and port (`3306`)                   |
-| `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`             | MySQL credentials and database name            |
-| `JWT_SECRET`                                                      | secret used to sign access tokens              |
-| `STRIPE_SECRET_KEY`                                               | Stripe secret key, `sk_test_...` for test mode |
-| `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                       | mailbox that sends payment confirmations       |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` | Google OAuth 2.0 credentials                   |
+| Variable                                                          | Description                                                             |
+| :---------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `PORT`                                                            | HTTP port, `3000` by default                                            |
+| `DATABASE_HOST`, `DATABASE_PORT`                                  | MySQL host and port (`3306`)                                            |
+| `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`             | MySQL credentials and database name                                     |
+| `JWT_SECRET`                                                      | secret used to sign access tokens                                       |
+| `STRIPE_SECRET_KEY`                                               | Stripe secret key, `sk_test_...` for test mode                          |
+| `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                       | mailbox that sends payment confirmations                                |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` | Google OAuth 2.0 credentials                                            |
 | `FRONTEND_URL`                                                    | frontend origin for the Google OAuth redirect (`http://localhost:5173`) |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat                      |
-| `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs API consumer key and secret            |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat                                               |
+| `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs API consumer key and secret                                     |
 
 ## Scripts
 
