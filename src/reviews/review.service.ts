@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Review } from '../models/review.model';
+import { User } from '../models/user.model';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { LogService } from '../logs/log.service';
 
@@ -58,6 +59,12 @@ export class ReviewService {
             where: { vinylId },
             limit: pageSize,
             offset,
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'firstName', 'lastName', 'avatar'],
+                },
+            ],
         });
     }
 }

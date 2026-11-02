@@ -56,7 +56,7 @@ Swagger UI with the full schema is available at `http://localhost:3000/api`.
 | `POST /auth/register`            | public | register with email and password, returns a JWT                             |
 | `POST /auth/login`               | public | log in with email and password, returns a JWT                               |
 | `GET /auth/google`               | public | start the Google OAuth flow                                                 |
-| `GET /auth/google/callback`      | public | Google redirect, sets the JWT cookie                                        |
+| `GET /auth/google/callback`      | public | Google redirect, hands the JWT to the frontend                              |
 | `GET /auth/logout`               | public | clear the JWT cookie                                                        |
 | `GET /users/profile`             | JWT    | current user profile, without the password hash                             |
 | `PUT /users/profile`             | JWT    | update the profile                                                          |
@@ -110,6 +110,7 @@ The API is served at `http://localhost:3000`, Swagger UI at `http://localhost:30
 | `STRIPE_SECRET_KEY`                                               | Stripe secret key, `sk_test_...` for test mode |
 | `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                       | mailbox that sends payment confirmations       |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` | Google OAuth 2.0 credentials                   |
+| `FRONTEND_URL`                                                    | frontend origin for the Google OAuth redirect (`http://localhost:5173`) |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat                      |
 | `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs API consumer key and secret            |
 

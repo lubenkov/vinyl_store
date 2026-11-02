@@ -44,12 +44,17 @@ export class AuthController {
     async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
         const user = req.user;
         const jwt = this.authService.generateJwt(user);
+        const frontendUrl = (
+            process.env.FRONTEND_URL ?? 'http://localhost:5173'
+        ).replace(/\/+$/, '');
         res.cookie('jwt', jwt, {
             httpOnly: true,
             sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production',
         });
-        res.redirect('/users/profile');
+        res.redirect(
+            `${frontendUrl}/auth/google/callback#accessToken=${encodeURIComponent(jwt)}`
+        );
     }
 
     @Get('logout')

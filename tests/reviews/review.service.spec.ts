@@ -152,6 +152,12 @@ describe('ReviewService', () => {
                 where: { vinylId },
                 limit: pageSize,
                 offset: (page - 1) * pageSize,
+                include: [
+                    {
+                        model: expect.any(Function),
+                        attributes: ['id', 'firstName', 'lastName', 'avatar'],
+                    },
+                ],
             });
         });
     });
