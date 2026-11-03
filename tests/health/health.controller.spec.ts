@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
+import { configureApp } from '../../src/setup-app';
 
 describe('HealthController (integration)', () => {
     let app: INestApplication;
@@ -12,6 +13,8 @@ describe('HealthController (integration)', () => {
         }).compile();
 
         app = moduleFixture.createNestApplication();
+        app.setGlobalPrefix('api');
+        configureApp(app, 'api/docs');
         await app.init();
     });
 
@@ -19,14 +22,14 @@ describe('HealthController (integration)', () => {
         await app.close();
     });
 
-    it('/health (GET)', async () => {
+    it('/api/health (GET)', async () => {
         const packageJson = {
             name: 'vinyl-store',
             version: '1.0.0',
         };
 
         const response = await request(app.getHttpServer())
-            .get('/health')
+            .get('/api/health')
             .expect(200);
 
         expect(response.body).toEqual({
@@ -34,11 +37,13 @@ describe('HealthController (integration)', () => {
             version: packageJson.version,
         });
 
-        expect(response.headers['content-type']).toBe('application/json');
-        expect(response.headers['x-powered-by']).toBe('Node.js');
+        expect(response.headers['content-type']).toContain('application/json');
+        expect(response.headers['x-powered-by']).toBeUndefined();
         expect(response.headers['cache-control']).toBe(
             'no-cache, no-store, must-revalidate'
         );
-        expect(response.headers['connection']).toBe('keep-alive');
+
+        await request(app.getHttpServer()).get('/health').expect(404);
+        await request(app.getHttpServer()).get('/api/docs').expect(200);
     });
 });

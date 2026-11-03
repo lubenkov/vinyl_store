@@ -25,12 +25,30 @@ export class ConfigServiceImpl {
         return this.configService.get<string>('DATABASE_NAME', 'vinyl_store');
     }
 
+    get databaseSsl(): boolean {
+        return this.configService.get<boolean>('DATABASE_SSL', false);
+    }
+
+    get databasePoolMax(): number {
+        return this.configService.get<number>('DATABASE_POOL_MAX', 5);
+    }
+
     get jwtSecret(): string {
         return this.configService.get<string>('JWT_SECRET')!;
     }
 
     get stripeSecretKey(): string {
         return this.configService.get<string>('STRIPE_SECRET_KEY')!;
+    }
+
+    get stripeDemoMode(): boolean {
+        const key = this.stripeSecretKey;
+        return (
+            !key ||
+            key === 'disabled' ||
+            key === 'sk_test_replace_me' ||
+            key.startsWith('sk_test_dummy')
+        );
     }
 
     get emailService(): string {

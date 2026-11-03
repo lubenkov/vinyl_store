@@ -15,6 +15,15 @@ import { ConfigServiceImpl } from './config.service';
                 DATABASE_USER: Joi.string().required(),
                 DATABASE_PASSWORD: Joi.string().required(),
                 DATABASE_NAME: Joi.string().required(),
+                DATABASE_SSL: Joi.boolean().default(false),
+                DATABASE_POOL_MAX: Joi.number()
+                    .integer()
+                    .min(1)
+                    .max(20)
+                    .default(5),
+                NODE_ENV: Joi.string()
+                    .valid('development', 'production', 'test')
+                    .default('development'),
                 JWT_SECRET: Joi.string().required(),
                 STRIPE_SECRET_KEY: Joi.string().required(),
                 EMAIL_SERVICE: Joi.string().required(),
@@ -22,7 +31,11 @@ import { ConfigServiceImpl } from './config.service';
                 EMAIL_PASS: Joi.string().required(),
                 GOOGLE_CLIENT_ID: Joi.string().required(),
                 GOOGLE_CLIENT_SECRET: Joi.string().required(),
-                GOOGLE_CALLBACK_URL: Joi.string().required(),
+                GOOGLE_CALLBACK_URL: Joi.string().uri().required(),
+                FRONTEND_URL: Joi.string()
+                    .uri()
+                    .default('http://localhost:5173'),
+                CORS_ORIGINS: Joi.string().allow('').optional(),
                 TELEGRAM_BOT_TOKEN: Joi.string().required(),
                 TELEGRAM_CHAT_ID: Joi.string().required(),
                 DISCOGS_KEY: Joi.string().required(),

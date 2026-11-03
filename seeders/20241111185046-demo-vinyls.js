@@ -4,11 +4,14 @@ module.exports = {
     async up(queryInterface) {
         const apiKey = process.env.DISCOGS_KEY;
         const apiSecret = process.env.DISCOGS_SECRET;
+        const isPlaceholder = (value) =>
+            !value || value === 'disabled' || value.startsWith('your_');
 
-        if (!apiKey || !apiSecret) {
-            throw new Error(
-                'DISCOGS_KEY and DISCOGS_SECRET environment variables are required to run this seeder'
+        if (isPlaceholder(apiKey) || isPlaceholder(apiSecret)) {
+            console.log(
+                'Skipping Discogs demo seed: DISCOGS_KEY/DISCOGS_SECRET are not configured.'
             );
+            return;
         }
 
         const vinylRecords = [];

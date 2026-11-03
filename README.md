@@ -23,7 +23,7 @@ audit log of everything the admins do.
 | Auth      | JWT with email and password (bcrypt hashes) or Google OAuth 2.0                                                    |
 | Roles     | `AuthGuard` for signed-in users, `AdminGuard` for the `admin` role                                                 |
 | Reviews   | score from 1 to 5, the author is taken from the token, not from the request body                                   |
-| Purchases | the price is read from the database, a Stripe PaymentIntent is created and a confirmation email is sent            |
+| Purchases | the price is read from the database; Stripe creates a PaymentIntent, or `sk_test_dummy` records a demo purchase    |
 | Discogs   | look up a release by Discogs ID and import it into the catalog                                                     |
 | Telegram  | send a record card to a Telegram chat through the Bot API                                                          |
 | Logs      | every create, update and delete is written to the `logs` table                                                     |
@@ -43,12 +43,15 @@ audit log of everything the admins do.
 | `src/models/`             | Sequelize models: `User`, `Vinyl`, `Review`, `Purchase`, `Log` |
 | `src/common/`             | guards and the Winston logger                                  |
 | `src/config/`             | configuration with Joi validation and the Sequelize factory    |
-| `migrations/`, `seeders/` | tables and demo data from Discogs                              |
+| `migrations/`, `seeders/` | tables and demo data from Discogs or static fixtures           |
 | `tests/`                  | Jest unit and integration tests                                |
 
 ## API
 
-Swagger UI with the full schema is available at `http://localhost:3000/api`.
+Swagger UI with the full schema is available at `http://localhost:3000/api/docs`.
+
+All routes are mounted under the `/api` prefix, so the real URL is
+`http://localhost:3000/api/<path>`. The table below lists the path after `/api`.
 
 | Endpoint                         | Access | Description                                                                 |
 | :------------------------------- | :----- | :-------------------------------------------------------------------------- |
@@ -90,29 +93,110 @@ CREATE DATABASE IF NOT EXISTS vinyl_store;
 
 ```bash
 npm run db:migrate
-npm run db:seed   # optional: 50 demo records from Discogs
+npm run db:seed   # optional: Discogs when keys are set, otherwise static demo data
 ```
 
 5. Start the app with `npm run start:dev` (watch mode) or `npm run build` + `npm run start:prod`.
 
-The API is served at `http://localhost:3000`, Swagger UI at `http://localhost:3000/api`.
+The API is served at `http://localhost:3000/api`, Swagger UI at
+`http://localhost:3000/api/docs`.
 
 > **Note:** secrets live only in `.env`, which is git-ignored.
 
 ## Environment variables
 
-| Variable                                                          | Description                                                             |
-| :---------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `PORT`                                                            | HTTP port, `3000` by default                                            |
-| `DATABASE_HOST`, `DATABASE_PORT`                                  | MySQL host and port (`3306`)                                            |
-| `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`             | MySQL credentials and database name                                     |
-| `JWT_SECRET`                                                      | secret used to sign access tokens                                       |
-| `STRIPE_SECRET_KEY`                                               | Stripe secret key, `sk_test_...` for test mode                          |
-| `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                       | mailbox that sends payment confirmations                                |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` | Google OAuth 2.0 credentials                                            |
-| `FRONTEND_URL`                                                    | frontend origin for the Google OAuth redirect (`http://localhost:5173`) |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat                                               |
-| `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs API consumer key and secret                                     |
+| Variable                                                          | Description                                                                   |
+| :---------------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| `PORT`                                                            | HTTP port, `3000` by default                                                  |
+| `DATABASE_HOST`, `DATABASE_PORT`                                  | MySQL host and port (`3306`)                                                  |
+| `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`             | MySQL credentials and database name                                           |
+| `DATABASE_SSL`                                                    | `true` for TiDB Cloud or another TLS-only MySQL                               |
+| `DATABASE_POOL_MAX`                                               | Sequelize pool size, `5` by default (keep small on serverless)                |
+| `JWT_SECRET`                                                      | secret used to sign access tokens                                             |
+| `STRIPE_SECRET_KEY`                                               | Stripe secret key; `sk_test_dummy` enables the demo purchase flow             |
+| `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                       | mailbox that sends payment confirmations                                      |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` | Google OAuth 2.0 credentials (callback ends with `/api/auth/google/callback`) |
+| `FRONTEND_URL`                                                    | frontend origin for the Google OAuth redirect (`http://localhost:5173`)       |
+| `CORS_ORIGINS`                                                    | comma-separated extra origins; `https://*.vercel.app` is supported            |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat; use `disabled` to turn the feature off             |
+| `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs API consumer key and secret; use `disabled` to skip Discogs           |
+
+## Deploy to Vercel
+
+Vercel has zero-configuration NestJS support: it detects `src/main.ts`, runs the
+build and turns the app into a single Vercel Function. The project is API-only;
+the SPA is deployed as a separate Vercel project. This is intentionally not the
+Render "one process + static frontend" scheme: the two projects stay independent.
+
+### 1. Database: TiDB Cloud Starter
+
+1. Create a free MySQL-compatible TiDB Cloud Starter cluster and copy its host,
+   port (`4000`), user, password and database name.
+2. Put the TiDB credentials into `.env` (or export them in your shell) and apply
+   the schema from your machine:
+
+```env
+DATABASE_HOST=...
+DATABASE_PORT=4000
+DATABASE_USER=...
+DATABASE_PASSWORD=...
+DATABASE_NAME=vinyl_store
+DATABASE_SSL=true
+```
+
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+The seeder uses Discogs when `DISCOGS_KEY`/`DISCOGS_SECRET` are real, otherwise
+it inserts 24 static demo records. Do not run migrations in the Vercel build
+step: the database is not guaranteed to be reachable at build time.
+
+### 2. Backend project
+
+Import this repository at <https://vercel.com/new>, keep the detected NestJS
+preset and set the environment variables:
+
+| Variable                                                                                | Value                                                                         |
+| :-------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME` | TiDB credentials                                                              |
+| `DATABASE_SSL`                                                                          | `true`                                                                        |
+| `DATABASE_POOL_MAX`                                                                     | `5`                                                                           |
+| `JWT_SECRET`                                                                            | 48+ random bytes                                                              |
+| `STRIPE_SECRET_KEY`                                                                     | `sk_test_dummy` for the demo flow, or a real `sk_test_...`                    |
+| `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                                             | real mailbox or placeholders; failures are logged and do not break a purchase |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                              | Google OAuth client                                                           |
+| `GOOGLE_CALLBACK_URL`                                                                   | `https://<backend>.vercel.app/api/auth/google/callback`                       |
+| `FRONTEND_URL`                                                                          | `https://<frontend>.vercel.app`                                               |
+| `CORS_ORIGINS`                                                                          | `https://<frontend>.vercel.app` (add preview origins if needed)               |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                                | real values or `disabled`                                                     |
+| `DISCOGS_KEY`, `DISCOGS_SECRET`                                                         | real values or `disabled`                                                     |
+
+`vercel.json` pins the function to `fra1`; change the region if the TiDB cluster
+is in another region. Health check: `/api/health`. Swagger: `/api/docs`.
+
+In Google Cloud Console add the callback above and
+`http://localhost:3000/api/auth/google/callback` for local development. The
+frontend must set `VITE_API_URL=https://<backend>.vercel.app/api`.
+
+### 3. First admin
+
+Register normally, then promote the account from a MySQL client:
+
+```sql
+UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
+```
+
+### Vercel notes
+
+-   The function is stateless and may cold-start; the first request after a quiet
+    period is slower. Fluid compute is enabled by default on new projects.
+-   The in-memory login/register rate limit is per function instance. It is a
+    cheap brake, not a distributed WAF.
+-   `STRIPE_SECRET_KEY=sk_test_dummy` returns `status: "demo"` and records the
+    purchase without calling Stripe; real test keys create a PaymentIntent.
+-   JWT access tokens live for 1 hour and have no refresh token yet.
 
 ## Scripts
 

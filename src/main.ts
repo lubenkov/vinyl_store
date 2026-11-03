@@ -1,30 +1,21 @@
-import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { logger } from './common/utils/logger';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { configureApp } from './setup-app';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    app.useGlobalPipes(
-        new ValidationPipe({ whitelist: true, transform: true })
-    );
-
-    app.enableCors();
-
-    const config = new DocumentBuilder()
-        .setTitle('Vinyl Store API')
-        .setDescription('Backend API for a vinyl records store')
-        .setVersion('1.0')
-        .addBearerAuth()
-        .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    app.setGlobalPrefix('api');
+    configureApp(app, 'api/docs');
 
     const port = Number(process.env.PORT) || 3000;
     await app.listen(port, () => {
-        logger.info(`Server listening at http://localhost:${port}`);
+        logger.info(`Server listening at http://localhost:${port}/api`);
     });
 }
-bootstrap();
+
+bootstrap().catch((error) => {
+    logger.error(error);
+    process.exit(1);
+});

@@ -15,6 +15,15 @@ export const createSequelizeOptions = (
     username: config.databaseUser,
     password: config.databasePassword,
     database: config.databaseName,
+    dialectOptions: config.databaseSsl
+        ? { ssl: { rejectUnauthorized: true } }
+        : undefined,
+    pool: {
+        max: config.databasePoolMax,
+        min: 0,
+        idle: 10_000,
+        acquire: 30_000,
+    },
     models: [Vinyl, Review, User, Purchase, Log],
     logging: false,
 });

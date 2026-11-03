@@ -14,11 +14,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
             clientID: configService.googleClientId,
             clientSecret: configService.googleClientSecret,
             callbackURL: configService.googleCallbackUrl,
-            scope: [
-                'email',
-                'profile',
-                'https://www.googleapis.com/auth/user.birthday.read',
-            ],
+            // Basic scopes only: sensitive birthday access would require
+            // Google OAuth verification before public use.
+            scope: ['email', 'profile'],
         });
     }
 
@@ -28,17 +26,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         profile: any,
         done: VerifyCallback
     ): Promise<any> {
-        const { name, emails, photos, birthday } = profile;
+        const { name, emails, photos } = profile;
         const email = emails[0].value;
         let user = await this.userService.findOneByEmail(email);
 
         if (!user) {
             user = await this.userService.registerUser({
                 email: email,
-                firstName: name.givenName,
-                lastName: name.familyName,
+                firstName: name?.givenName ?? email.split('@')[0],
+                lastName: name?.familyName ?? '',
                 avatar: photos?.[0]?.value,
-                birthdate: birthday ? birthday : null,
             });
         }
         const payload = { userId: user.id, email: user.email, role: user.role };
