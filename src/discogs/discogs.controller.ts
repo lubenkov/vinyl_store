@@ -14,6 +14,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('discogs')
 @Controller('discogs')
+@UseGuards(AdminGuard)
 export class DiscogsController {
     constructor(private readonly discogsService: DiscogsService) {}
 
@@ -48,7 +49,6 @@ export class DiscogsController {
         summary:
             'Fetch a vinyl record by its ID from Discogs and save it to the database',
     })
-    @UseGuards(AdminGuard)
     async fetchAndSaveVinylRecord(
         @Param('id', ParseIntPipe) id: number
     ): Promise<Vinyl> {

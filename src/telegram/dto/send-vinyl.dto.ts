@@ -1,19 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNumber, IsString, IsUrl, Min } from 'class-validator';
+import {
+    IsNumber,
+    IsString,
+    IsUrl,
+    Max,
+    MaxLength,
+    Min,
+} from 'class-validator';
 
 export class SendVinylDto {
-    @ApiProperty()
+    @ApiProperty({ maxLength: 255 })
     @IsString()
+    @MaxLength(255)
     name: string;
 
-    @ApiProperty()
-    @IsUrl()
+    @ApiProperty({ maxLength: 2048 })
+    @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+    @MaxLength(2048)
     link: string;
 
-    @ApiProperty()
+    @ApiProperty({ maximum: 1000000 })
     @Type(() => Number)
     @IsNumber()
     @Min(0)
+    @Max(1_000_000)
     price: number;
 }

@@ -54,10 +54,18 @@ export class ReviewService {
         page: number,
         pageSize: number
     ): Promise<Review[]> {
-        const offset = (page - 1) * pageSize;
+        const safePage = Math.min(
+            Math.max(Number.isFinite(page) ? Math.trunc(page) : 1, 1),
+            10_000
+        );
+        const safePageSize = Math.min(
+            Math.max(Number.isFinite(pageSize) ? Math.trunc(pageSize) : 10, 1),
+            50
+        );
+        const offset = (safePage - 1) * safePageSize;
         return await this.reviewModel.findAll({
             where: { vinylId },
-            limit: pageSize,
+            limit: safePageSize,
             offset,
             include: [
                 {

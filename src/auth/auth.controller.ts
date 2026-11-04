@@ -9,10 +9,11 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { GoogleAuthGuard } from './google-auth.guard';
+import { GoogleCallbackGuard } from './google-callback.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -35,25 +36,33 @@ export class AuthController {
 
     @Get('google')
     @ApiOperation({ summary: 'Initiate Google OAuth authentication' })
-    @UseGuards(AuthGuard('google'))
+    @UseGuards(GoogleAuthGuard)
     async googleAuth() {}
 
     @Get('google/callback')
     @ApiOperation({ summary: 'Handle Google OAuth callback and generate JWT' })
-    @UseGuards(AuthGuard('google'))
+    @UseGuards(GoogleCallbackGuard)
     async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
+        // The guard already redirected to the frontend on failed authentication.
+        if (!req.user) return;
+
         const user = req.user;
         const jwt = this.authService.generateJwt(user);
         const frontendUrl = (
             process.env.FRONTEND_URL ?? 'http://localhost:5173'
         ).replace(/\/+$/, '');
+        const state =
+            typeof req.query?.state === 'string' ? req.query.state : undefined;
+        const params = new URLSearchParams({ accessToken: jwt });
+        if (state) params.set('state', state);
+
         res.cookie('jwt', jwt, {
             httpOnly: true,
             sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production',
         });
         res.redirect(
-            `${frontendUrl}/auth/google/callback#accessToken=${encodeURIComponent(jwt)}`
+            `${frontendUrl}/auth/google/callback#${params.toString()}`
         );
     }
 

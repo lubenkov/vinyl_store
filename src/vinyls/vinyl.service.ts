@@ -12,6 +12,9 @@ import { ReviewService } from '../reviews/review.service';
 
 const SORTABLE_COLUMNS = ['id', 'name', 'author', 'price'];
 const SEARCHABLE_COLUMNS = ['name', 'author'];
+const MAX_PAGE_SIZE = 100;
+const MAX_OFFSET = 100_000;
+const MAX_SEARCH_TERM_LENGTH = 200;
 
 const escapeLikeTerm = (term: string): string =>
     term.replace(/[\\%_]/g, '\\$&');
@@ -30,25 +33,35 @@ export class VinylService {
     ): Promise<{ rows: Vinyl[]; count: number }> {
         const { limit = 10, offset = 0, searchBy, searchTerm } = paginationDto;
 
+        const safeLimit = Math.min(
+            Math.max(Number.isFinite(limit) ? Math.trunc(limit) : 10, 1),
+            MAX_PAGE_SIZE
+        );
+        const safeOffset = Math.min(
+            Math.max(Number.isFinite(offset) ? Math.trunc(offset) : 0, 0),
+            MAX_OFFSET
+        );
+
         const requestedSortBy = paginationDto.sortBy ?? '';
         const sortBy = SORTABLE_COLUMNS.includes(requestedSortBy)
             ? requestedSortBy
             : 'name';
         const order = paginationDto.order === 'DESC' ? 'DESC' : 'ASC';
+        const safeSearchTerm = searchTerm?.slice(0, MAX_SEARCH_TERM_LENGTH);
 
         const whereClause = (
-            searchBy && searchTerm && SEARCHABLE_COLUMNS.includes(searchBy)
+            searchBy && safeSearchTerm && SEARCHABLE_COLUMNS.includes(searchBy)
                 ? {
                       [searchBy]: {
-                          [Op.like]: `%${escapeLikeTerm(searchTerm)}%`,
+                          [Op.like]: `%${escapeLikeTerm(safeSearchTerm)}%`,
                       },
                   }
                 : {}
         ) as WhereOptions;
 
         return this.vinylModel.findAndCountAll({
-            limit,
-            offset,
+            limit: safeLimit,
+            offset: safeOffset,
             order: [[sortBy, order]],
             where: whereClause,
             include: [{ model: Review }],
@@ -110,6 +123,13 @@ export class VinylService {
         userId: number,
         createReviewDto: CreateReviewDto
     ): Promise<Review> {
+        const vinyl = await this.vinylModel.findByPk(vinylId, {
+            attributes: ['id'],
+        });
+        if (!vinyl) {
+            throw new NotFoundException('Vinyl not found');
+        }
+
         return await this.reviewService.createReview({
             ...createReviewDto,
             userId,

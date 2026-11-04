@@ -19,6 +19,7 @@ describe('VinylService', () => {
     beforeEach(async () => {
         vinylModel = {
             findAndCountAll: jest.fn(),
+            findByPk: jest.fn(),
             findOne: jest.fn(),
             create: jest.fn(),
             update: jest.fn(),
@@ -197,6 +198,7 @@ describe('VinylService', () => {
                 userId: 1,
                 vinylId: 1,
             };
+            vinylModel.findByPk.mockResolvedValue({ id: 1 });
             reviewService.createReview.mockResolvedValue({
                 id: 1,
                 ...reviewData,
@@ -206,6 +208,18 @@ describe('VinylService', () => {
 
             expect(result).toEqual({ id: 1, ...reviewData });
             expect(reviewService.createReview).toHaveBeenCalledWith(reviewData);
+        });
+
+        it('should reject a review for a missing vinyl', async () => {
+            vinylModel.findByPk.mockResolvedValue(null);
+
+            await expect(
+                service.addReview(1, 1, {
+                    content: 'Great vinyl',
+                    score: 5,
+                })
+            ).rejects.toThrow(NotFoundException);
+            expect(reviewService.createReview).not.toHaveBeenCalled();
         });
     });
 

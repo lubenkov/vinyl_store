@@ -24,7 +24,7 @@ import { ConfigServiceImpl } from './config.service';
                 NODE_ENV: Joi.string()
                     .valid('development', 'production', 'test')
                     .default('development'),
-                JWT_SECRET: Joi.string().required(),
+                JWT_SECRET: Joi.string().min(32).required(),
                 STRIPE_SECRET_KEY: Joi.string().required(),
                 EMAIL_SERVICE: Joi.string().required(),
                 EMAIL_USER: Joi.string().required(),
@@ -36,6 +36,7 @@ import { ConfigServiceImpl } from './config.service';
                     .uri()
                     .default('http://localhost:5173'),
                 CORS_ORIGINS: Joi.string().allow('').optional(),
+                SWAGGER_ENABLED: Joi.boolean().default(false),
                 TELEGRAM_BOT_TOKEN: Joi.string().required(),
                 TELEGRAM_CHAT_ID: Joi.string().required(),
                 DISCOGS_KEY: Joi.string().required(),

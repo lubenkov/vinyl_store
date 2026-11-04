@@ -10,7 +10,6 @@ import {
     UseGuards,
     Req,
     ParseIntPipe,
-    DefaultValuePipe,
 } from '@nestjs/common';
 import { VinylService } from './vinyl.service';
 import { CreateVinylDto } from './dto/create-vinyl.dto';
@@ -20,6 +19,7 @@ import { AuthGuard } from '../common/guards/auth.guard';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { Review } from '../models/review.model';
 import { CreateReviewDto } from '../reviews/dto/create-review.dto';
+import { ReviewPaginationDto } from '../reviews/dto/review-pagination.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('vinyls')
@@ -87,9 +87,12 @@ export class VinylController {
     })
     async getReviews(
         @Param('id', ParseIntPipe) vinylId: number,
-        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
+        @Query() pagination: ReviewPaginationDto
     ): Promise<Review[]> {
-        return await this.vinylService.getReviews(vinylId, page, limit);
+        return await this.vinylService.getReviews(
+            vinylId,
+            pagination.page ?? 1,
+            pagination.limit ?? 10
+        );
     }
 }

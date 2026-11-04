@@ -18,6 +18,12 @@ export class AuthService {
     }
 
     async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
+        // bcrypt only uses the first 72 bytes; reject longer input instead of
+        // silently accepting a truncated password.
+        if (Buffer.byteLength(loginDto.password, 'utf8') > 72) {
+            throw new UnauthorizedException('Invalid email or password');
+        }
+
         const user = await this.usersService.findOneByEmail(loginDto.email);
 
         if (!user || !user.password) {

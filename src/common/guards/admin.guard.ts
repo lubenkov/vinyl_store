@@ -19,7 +19,8 @@ export class AdminGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request: Request = context.switchToHttp().getRequest();
         const authHeader = request.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
+        const match = /^Bearer\s+(.+)$/i.exec(authHeader ?? '');
+        const token = match?.[1];
 
         if (!token) {
             throw new UnauthorizedException('Access token is missing');
@@ -27,14 +28,26 @@ export class AdminGuard implements CanActivate {
 
         let payload: { userId: number };
         try {
-            payload = this.jwtService.verify(token);
+            const verified = this.jwtService.verify<{ userId?: unknown }>(
+                token,
+                { algorithms: ['HS256'] }
+            );
+            if (
+                !verified ||
+                typeof verified.userId !== 'number' ||
+                !Number.isInteger(verified.userId) ||
+                verified.userId <= 0
+            ) {
+                throw new Error('Invalid token payload');
+            }
+            payload = { userId: verified.userId };
         } catch {
             throw new UnauthorizedException('Invalid or expired access token');
         }
 
         (request as any).user = payload;
 
-        const user = await this.userService.getProfile(String(payload.userId));
+        const user = await this.userService.getAuthUser(String(payload.userId));
 
         if (user.role !== 'admin') {
             throw new ForbiddenException('Admin access is required');

@@ -10,7 +10,7 @@ import { AppConfigModule } from './config/config.module';
             inject: [ConfigServiceImpl],
             useFactory: async (configService: ConfigServiceImpl) => ({
                 secret: configService.jwtSecret,
-                signOptions: { expiresIn: '1h' },
+                signOptions: { expiresIn: '1h', algorithm: 'HS256' },
             }),
         }),
     ],

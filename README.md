@@ -49,6 +49,7 @@ audit log of everything the admins do.
 ## API
 
 Swagger UI with the full schema is available at `http://localhost:3000/api/docs`.
+In production it is disabled unless `SWAGGER_ENABLED=true` is set explicitly.
 
 All routes are mounted under the `/api` prefix, so the real URL is
 `http://localhost:3000/api/<path>`. The table below lists the path after `/api`.
@@ -73,9 +74,9 @@ All routes are mounted under the `/api` prefix, so the real URL is
 | `POST /vinyls/:id/reviews`       | JWT    | leave a review; the author comes from the token                             |
 | `DELETE /reviews/:id`            | admin  | delete a review                                                             |
 | `POST /purchases`                | JWT    | buy a record (`vinylId` and `currency` only)                                |
-| `GET /discogs/vinyls`            | public | search releases on Discogs                                                  |
-| `GET /discogs/vinyls/:id`        | public | a release by its Discogs ID                                                 |
-| `GET /discogs/vinyls/:id/scores` | public | a release with its community rating                                         |
+| `GET /discogs/vinyls`            | admin  | search releases on Discogs                                                  |
+| `GET /discogs/vinyls/:id`        | admin  | a release by its Discogs ID                                                 |
+| `GET /discogs/vinyls/:id/scores` | admin  | a release with its community rating                                         |
 | `POST /discogs/vinyls/:id`       | admin  | import a release into the catalog                                           |
 | `POST /telegram/sendVinyl`       | admin  | send a record card to the Telegram chat                                     |
 | `GET /logs`                      | admin  | the audit log                                                               |
@@ -112,12 +113,13 @@ The API is served at `http://localhost:3000/api`, Swagger UI at
 | `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`             | MySQL credentials and database name                                           |
 | `DATABASE_SSL`                                                    | `true` for TiDB Cloud or another TLS-only MySQL                               |
 | `DATABASE_POOL_MAX`                                               | Sequelize pool size, `5` by default (keep small on serverless)                |
-| `JWT_SECRET`                                                      | secret used to sign access tokens                                             |
+| `JWT_SECRET`                                                      | secret used to sign access tokens, at least 32 characters                     |
 | `STRIPE_SECRET_KEY`                                               | Stripe secret key; `sk_test_dummy` enables the demo purchase flow             |
 | `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                       | mailbox that sends payment confirmations                                      |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL` | Google OAuth 2.0 credentials (callback ends with `/api/auth/google/callback`) |
 | `FRONTEND_URL`                                                    | frontend origin for the Google OAuth redirect (`http://localhost:5173`)       |
 | `CORS_ORIGINS`                                                    | comma-separated extra origins; `https://*.vercel.app` is supported            |
+| `SWAGGER_ENABLED`                                                 | set `true` to expose `/api/docs` in production (off by default)               |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat; use `disabled` to turn the feature off             |
 | `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs API consumer key and secret; use `disabled` to skip Discogs           |
 
@@ -170,11 +172,13 @@ preset and set the environment variables:
 | `GOOGLE_CALLBACK_URL`                                                                   | `https://<backend>.vercel.app/api/auth/google/callback`                       |
 | `FRONTEND_URL`                                                                          | `https://<frontend>.vercel.app`                                               |
 | `CORS_ORIGINS`                                                                          | `https://<frontend>.vercel.app` (add preview origins if needed)               |
+| `SWAGGER_ENABLED`                                                                       | `false` in production unless you explicitly need the API schema               |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                                | real values or `disabled`                                                     |
 | `DISCOGS_KEY`, `DISCOGS_SECRET`                                                         | real values or `disabled`                                                     |
 
 `vercel.json` pins the function to `fra1`; change the region if the TiDB cluster
-is in another region. Health check: `/api/health`. Swagger: `/api/docs`.
+is in another region. Health check: `/api/health`. Swagger: `/api/docs` when
+`SWAGGER_ENABLED=true` (or outside production).
 
 In Google Cloud Console add the callback above and
 `http://localhost:3000/api/auth/google/callback` for local development. The

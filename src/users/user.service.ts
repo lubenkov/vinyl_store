@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Injectable,
     NotFoundException,
     ConflictException,
@@ -13,6 +14,17 @@ import { RegisterDto } from './dto/register.dto';
 import { LogService } from '../logs/log.service';
 
 const BCRYPT_SALT_ROUNDS = 10;
+const BCRYPT_MAX_PASSWORD_BYTES = 72;
+
+function normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+}
+
+function assertPasswordFitsBcrypt(password: string): void {
+    if (Buffer.byteLength(password, 'utf8') > BCRYPT_MAX_PASSWORD_BYTES) {
+        throw new BadRequestException('Password must be at most 72 bytes long');
+    }
+}
 
 @Injectable()
 export class UsersService {
@@ -35,16 +47,29 @@ export class UsersService {
         return user;
     }
 
+    async getAuthUser(userId: string): Promise<User> {
+        const user = await this.userModel.findOne({
+            where: { id: userId },
+            attributes: ['id', 'role'],
+        });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        return user;
+    }
+
     async registerUser(registerDto: RegisterDto): Promise<User> {
+        const email = normalizeEmail(registerDto.email);
         const existingUser = await this.userModel.findOne({
-            where: { email: registerDto.email },
+            where: { email },
         });
         if (existingUser) {
             throw new ConflictException('User with this email already exists');
         }
 
-        const newUserData: RegisterDto = { ...registerDto };
+        const newUserData: RegisterDto = { ...registerDto, email };
         if (newUserData.password) {
+            assertPasswordFitsBcrypt(newUserData.password);
             newUserData.password = await bcrypt.hash(
                 newUserData.password,
                 BCRYPT_SALT_ROUNDS
@@ -97,7 +122,9 @@ export class UsersService {
     }
 
     async findOneByEmail(email: string): Promise<User | null> {
-        const user = await this.userModel.findOne({ where: { email } });
+        const user = await this.userModel.findOne({
+            where: { email: normalizeEmail(email) },
+        });
 
         return user;
     }

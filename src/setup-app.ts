@@ -7,8 +7,16 @@ const AUTH_RATE_LIMIT_PATHS = new Set([
     '/api/auth/login',
     '/api/auth/register',
 ]);
-const AUTH_RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_WINDOW_MS = 60_000;
 const AUTH_RATE_LIMIT_MAX = 10;
+const WRITE_RATE_LIMIT_MAX = 20;
+
+const REVIEW_CREATE_PATH = /^\/api\/vinyls\/\d+\/reviews$/;
+
+interface RateLimitRule {
+    key: string;
+    max: number;
+}
 
 interface RateBucket {
     count: number;
@@ -16,6 +24,27 @@ interface RateBucket {
 }
 
 const rateBuckets = new Map<string, RateBucket>();
+
+function getRateLimitRule(method: string, path: string): RateLimitRule | null {
+    const normalizedPath = path.replace(/\/+$/, '').toLowerCase();
+
+    if (AUTH_RATE_LIMIT_PATHS.has(normalizedPath)) {
+        return { key: 'auth', max: AUTH_RATE_LIMIT_MAX };
+    }
+
+    if (
+        method === 'POST' &&
+        (normalizedPath === '/api/purchases' ||
+            REVIEW_CREATE_PATH.test(normalizedPath))
+    ) {
+        return {
+            key: normalizedPath === '/api/purchases' ? 'purchase' : 'review',
+            max: WRITE_RATE_LIMIT_MAX,
+        };
+    }
+
+    return null;
+}
 
 function getCorsOrigins(): string[] {
     return [process.env.CORS_ORIGINS, process.env.FRONTEND_URL]
@@ -37,13 +66,20 @@ function matchesOrigin(origin: string, pattern: string): boolean {
 }
 
 export function isAllowedOrigin(origin: string | undefined): boolean {
+    const isProduction = process.env.NODE_ENV === 'production';
     const allowed = getCorsOrigins();
-    if (!origin || allowed.length === 0) return true;
-    return allowed.some((pattern) => matchesOrigin(origin, pattern));
+
+    if (!origin) return true;
+    // Fail closed in production when no explicit frontend origin is configured.
+    if (allowed.length === 0) return !isProduction;
+
+    return allowed.some((pattern) =>
+        pattern === '*' ? !isProduction : matchesOrigin(origin, pattern)
+    );
 }
 
 function securityHeaders(
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
 ): void {
@@ -51,14 +87,39 @@ function securityHeaders(
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('X-DNS-Prefetch-Control', 'off');
+    res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+    res.setHeader(
+        'Permissions-Policy',
+        'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+    );
+    res.setHeader(
+        'Content-Security-Policy',
+        "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+    );
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader(
+            'Strict-Transport-Security',
+            'max-age=31536000; includeSubDomains'
+        );
+    }
+
+    // Do not let browsers or proxies cache auth, profile or payment responses.
+    if (
+        /^\/(api\/)?(auth|users|purchases|logs)(\/|$)/i.test(req.path) ||
+        /^\/api\/(auth|users|purchases|logs)(\/|$)/i.test(req.path)
+    ) {
+        res.setHeader('Cache-Control', 'no-store');
+    }
+
     res.removeHeader('X-Powered-By');
     next();
 }
 
-function authRateLimit(req: Request, res: Response, next: NextFunction): void {
-    const path = req.path.replace(/\/+$/, '').toLowerCase();
-    if (!AUTH_RATE_LIMIT_PATHS.has(path)) {
+function apiRateLimit(req: Request, res: Response, next: NextFunction): void {
+    const rule = getRateLimitRule(req.method, req.path);
+    if (!rule) {
         next();
         return;
     }
@@ -70,20 +131,21 @@ function authRateLimit(req: Request, res: Response, next: NextFunction): void {
         }
     }
 
-    const key = req.ip || req.socket.remoteAddress || 'unknown';
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const key = `${ip}:${rule.key}`;
     const bucket = rateBuckets.get(key);
 
     if (!bucket || bucket.resetAt <= now) {
         rateBuckets.set(key, {
             count: 1,
-            resetAt: now + AUTH_RATE_LIMIT_WINDOW_MS,
+            resetAt: now + RATE_LIMIT_WINDOW_MS,
         });
         next();
         return;
     }
 
     bucket.count += 1;
-    if (bucket.count > AUTH_RATE_LIMIT_MAX) {
+    if (bucket.count > rule.max) {
         res.setHeader(
             'Retry-After',
             String(Math.ceil((bucket.resetAt - now) / 1000))
@@ -108,9 +170,13 @@ export function configureApp(app: INestApplication, swaggerPath: string): void {
     }
 
     app.use(securityHeaders);
-    app.use(authRateLimit);
+    app.use(apiRateLimit);
     app.useGlobalPipes(
-        new ValidationPipe({ whitelist: true, transform: true })
+        new ValidationPipe({
+            whitelist: true,
+            forbidNonWhitelisted: true,
+            transform: true,
+        })
     );
 
     const corsOptions: CorsOptions = {
@@ -121,12 +187,18 @@ export function configureApp(app: INestApplication, swaggerPath: string): void {
     };
     app.enableCors(corsOptions);
 
-    const config = new DocumentBuilder()
-        .setTitle('Vinyl Store API')
-        .setDescription('Backend API for a vinyl records store')
-        .setVersion('1.0')
-        .addBearerAuth()
-        .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup(swaggerPath, app, document);
+    const swaggerEnabled =
+        process.env.SWAGGER_ENABLED === 'true' ||
+        process.env.NODE_ENV !== 'production';
+
+    if (swaggerEnabled) {
+        const config = new DocumentBuilder()
+            .setTitle('Vinyl Store API')
+            .setDescription('Backend API for a vinyl records store')
+            .setVersion('1.0')
+            .addBearerAuth()
+            .build();
+        const document = SwaggerModule.createDocument(app, config);
+        SwaggerModule.setup(swaggerPath, app, document);
+    }
 }
