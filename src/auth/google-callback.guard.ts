@@ -31,12 +31,8 @@ export class GoogleCallbackGuard extends AuthGuard('google') {
             // Log the real reason: without it every OAuth failure looks the
             // same ("error=google") and the cause stays invisible.
             const details = readInfo(info);
-            logger.error(
-                `Google OAuth failed: ${
-                    err?.message ?? details.message ?? 'unknown error'
-                }`,
-                err?.stack
-            );
+            const failureReason = err?.message ?? details.message ?? 'unknown';
+            logger.error(`Google OAuth failed: ${failureReason}`);
             if (err?.oauthError) {
                 logger.error(
                     `Google OAuth provider response: ${JSON.stringify(
@@ -50,9 +46,9 @@ export class GoogleCallbackGuard extends AuthGuard('google') {
                 process.env.FRONTEND_URL ?? 'http://localhost:5173'
             ).replace(/\/+$/, '');
             const reason =
-                details.message === 'account_exists'
+                failureReason === 'account_exists'
                     ? 'google_account_exists'
-                    : details.message === 'email_not_verified'
+                    : failureReason === 'email_not_verified'
                       ? 'google_email_not_verified'
                       : 'google';
 
