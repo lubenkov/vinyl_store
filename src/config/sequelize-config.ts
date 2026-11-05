@@ -1,3 +1,8 @@
+// Sequelize loads the MySQL driver with a dynamic `require('mysql2')`, which
+// file tracers cannot see. Without this static import the driver is dropped
+// from the serverless bundle and the app dies with "Please install mysql2
+// package manually".
+import 'mysql2';
 import { SequelizeOptions } from 'sequelize-typescript';
 import { ConfigServiceImpl } from './config.service';
 import { Vinyl } from '../models/vinyl.model';

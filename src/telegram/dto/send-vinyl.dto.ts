@@ -16,7 +16,11 @@ export class SendVinylDto {
     name: string;
 
     @ApiProperty({ maxLength: 2048 })
-    @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+    @IsUrl({
+        require_protocol: true,
+        protocols: ['http', 'https'],
+        require_tld: false,
+    })
     @MaxLength(2048)
     link: string;
 
