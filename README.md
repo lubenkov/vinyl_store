@@ -74,7 +74,7 @@ All routes are mounted under the `/api` prefix, so the real URL is
 | `POST /vinyls/:id/reviews`       | JWT    | leave a review; the author comes from the token                             |
 | `DELETE /reviews/:id`            | admin  | delete a review                                                             |
 | `POST /purchases`                | JWT    | buy a record (`vinylId` and `currency` only)                                |
-| `GET /discogs/vinyls`            | admin  | search releases on Discogs                                                  |
+| `GET /discogs/vinyls`            | admin  | Discogs release search feed (no query parameters)                           |
 | `GET /discogs/vinyls/:id`        | admin  | a release by its Discogs ID                                                 |
 | `GET /discogs/vinyls/:id/scores` | admin  | a release with its community rating                                         |
 | `POST /discogs/vinyls/:id`       | admin  | import a release into the catalog                                           |
@@ -120,8 +120,11 @@ The API is served at `http://localhost:3000/api`, Swagger UI at
 | `FRONTEND_URL`                                                    | frontend origin for the Google OAuth redirect (`http://localhost:5173`)       |
 | `CORS_ORIGINS`                                                    | comma-separated extra origins; `https://*.vercel.app` is supported            |
 | `SWAGGER_ENABLED`                                                 | set `true` to expose `/api/docs` in production (off by default)               |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat; use `disabled` to turn the feature off             |
-| `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs API consumer key and secret; use `disabled` to skip Discogs           |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                          | bot token and target chat; real values are required for the admin action      |
+| `DISCOGS_KEY`, `DISCOGS_SECRET`                                   | Discogs consumer key and secret; real values are required for admin import    |
+
+> `disabled` in `.env.example` is a placeholder: it skips the Discogs demo seeder, but the
+> Telegram and Discogs admin actions still require real credentials.
 
 ## Deploy to Vercel
 
@@ -173,8 +176,8 @@ preset and set the environment variables:
 | `FRONTEND_URL`                                                                          | `https://<frontend>.vercel.app`                                               |
 | `CORS_ORIGINS`                                                                          | `https://<frontend>.vercel.app` (add preview origins if needed)               |
 | `SWAGGER_ENABLED`                                                                       | `false` in production unless you explicitly need the API schema               |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                                | real values or `disabled`                                                     |
-| `DISCOGS_KEY`, `DISCOGS_SECRET`                                                         | real values or `disabled`                                                     |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                                | real values; required for the admin Telegram action                           |
+| `DISCOGS_KEY`, `DISCOGS_SECRET`                                                         | real values; required for Discogs import                                      |
 
 `vercel.json` pins the function to `fra1`; change the region if the TiDB cluster
 is in another region. Health check: `/api/health`. Swagger: `/api/docs` when
@@ -196,8 +199,8 @@ UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
 
 -   The function is stateless and may cold-start; the first request after a quiet
     period is slower. Fluid compute is enabled by default on new projects.
--   The in-memory login/register rate limit is per function instance. It is a
-    cheap brake, not a distributed WAF.
+-   The in-memory rate limit for login/register, purchases and review writes is
+    per function instance. It is a cheap brake, not a distributed WAF.
 -   `STRIPE_SECRET_KEY=sk_test_dummy` returns `status: "demo"` and records the
     purchase without calling Stripe; real test keys create a PaymentIntent.
 -   JWT access tokens live for 1 hour and have no refresh token yet.
@@ -217,7 +220,7 @@ UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
 
 ## Tests
 
-`npm test` runs 15 suites with 70 tests: services (business logic and error cases) and controllers
+`npm test` runs 16 suites with 77 tests: services (business logic and error cases) and controllers
 (the HTTP layer with mocked services). The security behaviour is covered too — the purchase price
 comes from the database, a review cannot be posted on behalf of another user, and password hashes
 never leave the service.
