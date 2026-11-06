@@ -1,5 +1,7 @@
 'use strict';
 
+const { findDemoCover } = require('../config/demo-covers');
+
 const DEMO_VINYLS = [
     {
         name: 'Kind of Blue',
@@ -206,8 +208,13 @@ module.exports = {
             return;
         }
 
-        await queryInterface.bulkInsert('vinyls', DEMO_VINYLS);
-        console.log(`Inserted ${DEMO_VINYLS.length} static demo vinyls.`);
+        const vinyls = DEMO_VINYLS.map((vinyl) => ({
+            ...vinyl,
+            image: findDemoCover(vinyl.author, vinyl.name) || vinyl.image,
+        }));
+
+        await queryInterface.bulkInsert('vinyls', vinyls);
+        console.log(`Inserted ${vinyls.length} static demo vinyls.`);
     },
 
     async down(queryInterface) {
