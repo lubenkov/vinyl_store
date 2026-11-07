@@ -13,6 +13,12 @@ const WRITE_RATE_LIMIT_MAX = 20;
 
 const REVIEW_CREATE_PATH = /^\/api\/vinyls\/\d+\/reviews$/;
 
+// Swagger UI static assets are not packaged into the Vercel function, so the
+// generated HTML cannot load them from /api/docs. Pin the same version as the
+// installed swagger-ui-dist and load the assets from a CDN instead.
+const SWAGGER_UI_VERSION = '5.18.2';
+const SWAGGER_UI_CDN = `https://cdn.jsdelivr.net/npm/swagger-ui-dist@${SWAGGER_UI_VERSION}`;
+
 interface RateLimitRule {
     key: string;
     max: number;
@@ -199,6 +205,13 @@ export function configureApp(app: INestApplication, swaggerPath: string): void {
             .addBearerAuth()
             .build();
         const document = SwaggerModule.createDocument(app, config);
-        SwaggerModule.setup(swaggerPath, app, document);
+        SwaggerModule.setup(swaggerPath, app, document, {
+            customCssUrl: `${SWAGGER_UI_CDN}/swagger-ui.css`,
+            customJs: [
+                `${SWAGGER_UI_CDN}/swagger-ui-bundle.js`,
+                `${SWAGGER_UI_CDN}/swagger-ui-standalone-preset.js`,
+            ],
+            customfavIcon: `${SWAGGER_UI_CDN}/favicon-32x32.png`,
+        });
     }
 }

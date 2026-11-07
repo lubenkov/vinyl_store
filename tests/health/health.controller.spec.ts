@@ -44,6 +44,14 @@ describe('HealthController (integration)', () => {
         );
 
         await request(app.getHttpServer()).get('/health').expect(404);
-        await request(app.getHttpServer()).get('/api/docs').expect(200);
+        const docs = await request(app.getHttpServer())
+            .get('/api/docs')
+            .expect(200);
+        expect(docs.text).toContain(
+            'cdn.jsdelivr.net/npm/swagger-ui-dist@5.18.2/swagger-ui-bundle.js'
+        );
+        expect(docs.text).toContain(
+            'cdn.jsdelivr.net/npm/swagger-ui-dist@5.18.2/swagger-ui.css'
+        );
     });
 });
