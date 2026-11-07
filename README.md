@@ -9,6 +9,10 @@ REST API for an online vinyl records store, written in TypeScript with NestJS, M
 [![CI](https://github.com/lubenkov/vinyl_store/actions/workflows/ci.yml/badge.svg?branch=final_project)](https://github.com/lubenkov/vinyl_store/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Open_the_site-D69F55?style=for-the-badge&logo=vercel&logoColor=white)](https://vinyl-store-frontend-black.vercel.app)
+[![API Docs](https://img.shields.io/badge/API_Docs-Open_Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://vinyl-store-api.vercel.app/api/docs)
+[![Frontend](https://img.shields.io/badge/Frontend-vinyl__store__frontend-3178C6?style=for-the-badge&logo=github&logoColor=white)](https://github.com/lubenkov/vinyl_store_frontend)
+
 ## About
 
 The backend of a vinyl record shop: a catalog with search, sorting and pagination, sign-in with
@@ -48,8 +52,14 @@ audit log of everything the admins do.
 
 ## API
 
-Swagger UI with the full schema is available at `http://localhost:3000/api/docs`.
-In production it is disabled unless `SWAGGER_ENABLED=true` is set explicitly.
+Swagger UI with the full schema is available in two places:
+
+- **Live demo:** <https://vinyl-store-api.vercel.app/api/docs>
+- **Local development:** `http://localhost:3000/api/docs`
+
+The demo deployment keeps Swagger on intentionally: `SWAGGER_ENABLED=true` is set in
+production. Set `SWAGGER_ENABLED=false` for a real production deployment where the
+schema should stay private.
 
 All routes are mounted under the `/api` prefix, so the real URL is
 `http://localhost:3000/api/<path>`. The table below lists the path after `/api`.
@@ -175,13 +185,13 @@ preset and set the environment variables:
 | `GOOGLE_CALLBACK_URL`                                                                   | `https://<backend>.vercel.app/api/auth/google/callback`                       |
 | `FRONTEND_URL`                                                                          | `https://<frontend>.vercel.app`                                               |
 | `CORS_ORIGINS`                                                                          | `https://<frontend>.vercel.app` (add preview origins if needed)               |
-| `SWAGGER_ENABLED`                                                                       | `false` in production unless you explicitly need the API schema               |
+| `SWAGGER_ENABLED`                                                                       | `true` for this demo (Swagger is public); `false` for a private production API |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                                | real values; required for the admin Telegram action                           |
 | `DISCOGS_KEY`, `DISCOGS_SECRET`                                                         | real values; required for Discogs import                                      |
 
 `vercel.json` pins the function to `fra1`; change the region if the TiDB cluster
-is in another region. Health check: `/api/health`. Swagger: `/api/docs` when
-`SWAGGER_ENABLED=true` (or outside production).
+is in another region. Health check: `/api/health`. Swagger: `/api/docs` is on in
+this demo because `SWAGGER_ENABLED=true`; keep it off in a real production setup.
 
 In Google Cloud Console add the callback above and
 `http://localhost:3000/api/auth/google/callback` for local development. The
