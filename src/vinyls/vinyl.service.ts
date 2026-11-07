@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, WhereOptions, col, fn, where } from 'sequelize';
 import { Vinyl } from '../models/vinyl.model';
 import { Review } from '../models/review.model';
 import { CreateVinylDto } from './dto/create-vinyl.dto';
@@ -51,11 +51,11 @@ export class VinylService {
 
         const whereClause = (
             searchBy && safeSearchTerm && SEARCHABLE_COLUMNS.includes(searchBy)
-                ? {
-                      [searchBy]: {
-                          [Op.like]: `%${escapeLikeTerm(safeSearchTerm)}%`,
-                      },
-                  }
+                ? where(fn('LOWER', col(searchBy)), {
+                      [Op.like]: `%${escapeLikeTerm(
+                          safeSearchTerm.toLowerCase()
+                      )}%`,
+                  })
                 : {}
         ) as WhereOptions;
 

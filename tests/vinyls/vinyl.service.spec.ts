@@ -9,6 +9,7 @@ import { CreateVinylDto } from '../../src/vinyls/dto/create-vinyl.dto';
 import { UpdateVinylDto } from '../../src/vinyls/dto/update-vinyl.dto';
 import { PaginationDto } from '../../src/vinyls/dto/pagination.dto';
 import { Review } from '../../src/models/review.model';
+import { Op } from 'sequelize';
 
 describe('VinylService', () => {
     let service: VinylService;
@@ -111,6 +112,24 @@ describe('VinylService', () => {
                 where: {},
                 include: [{ model: Review }],
             });
+        });
+
+        it('should search case-insensitively with LOWER', async () => {
+            vinylModel.findAndCountAll.mockResolvedValue({
+                rows: [],
+                count: 0,
+            });
+
+            await service.findAll({
+                searchBy: 'name',
+                searchTerm: 'ABBEY',
+            } as PaginationDto);
+
+            const args = vinylModel.findAndCountAll.mock.calls[0][0];
+            expect(args.where.attribute.fn).toBe('LOWER');
+            expect(args.where.attribute.args[0].col).toBe('name');
+            expect(args.where.comparator).toBe('=');
+            expect(args.where.logic[Op.like]).toBe('%abbey%');
         });
     });
 
