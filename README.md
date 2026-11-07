@@ -54,8 +54,8 @@ audit log of everything the admins do.
 
 Swagger UI with the full schema is available in two places:
 
-- **Live demo:** <https://vinyl-store-api.vercel.app/api/docs>
-- **Local development:** `http://localhost:3000/api/docs`
+-   **Live demo:** <https://vinyl-store-api.vercel.app/api/docs>
+-   **Local development:** `http://localhost:3000/api/docs`
 
 The demo deployment keeps Swagger on intentionally: `SWAGGER_ENABLED=true` is set in
 production. Set `SWAGGER_ENABLED=false` for a real production deployment where the
@@ -173,21 +173,21 @@ step: the database is not guaranteed to be reachable at build time.
 Import this repository at <https://vercel.com/new>, keep the detected NestJS
 preset and set the environment variables:
 
-| Variable                                                                                | Value                                                                         |
-| :-------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
-| `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME` | TiDB credentials                                                              |
-| `DATABASE_SSL`                                                                          | `true`                                                                        |
-| `DATABASE_POOL_MAX`                                                                     | `5`                                                                           |
-| `JWT_SECRET`                                                                            | 48+ random bytes                                                              |
-| `STRIPE_SECRET_KEY`                                                                     | `sk_test_dummy` for the demo flow, or a real `sk_test_...`                    |
-| `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                                             | real mailbox or placeholders; failures are logged and do not break a purchase |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                              | Google OAuth client                                                           |
-| `GOOGLE_CALLBACK_URL`                                                                   | `https://<backend>.vercel.app/api/auth/google/callback`                       |
-| `FRONTEND_URL`                                                                          | `https://<frontend>.vercel.app`                                               |
-| `CORS_ORIGINS`                                                                          | `https://<frontend>.vercel.app` (add preview origins if needed)               |
+| Variable                                                                                | Value                                                                          |
+| :-------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME` | TiDB credentials                                                               |
+| `DATABASE_SSL`                                                                          | `true`                                                                         |
+| `DATABASE_POOL_MAX`                                                                     | `5`                                                                            |
+| `JWT_SECRET`                                                                            | 48+ random bytes                                                               |
+| `STRIPE_SECRET_KEY`                                                                     | `sk_test_dummy` for the demo flow, or a real `sk_test_...`                     |
+| `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS`                                             | real mailbox or placeholders; failures are logged and do not break a purchase  |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                              | Google OAuth client                                                            |
+| `GOOGLE_CALLBACK_URL`                                                                   | `https://<backend>.vercel.app/api/auth/google/callback`                        |
+| `FRONTEND_URL`                                                                          | `https://<frontend>.vercel.app`                                                |
+| `CORS_ORIGINS`                                                                          | `https://<frontend>.vercel.app` (add preview origins if needed)                |
 | `SWAGGER_ENABLED`                                                                       | `true` for this demo (Swagger is public); `false` for a private production API |
-| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                                | real values; required for the admin Telegram action                           |
-| `DISCOGS_KEY`, `DISCOGS_SECRET`                                                         | real values; required for Discogs import                                      |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`                                                | real values; required for the admin Telegram action                            |
+| `DISCOGS_KEY`, `DISCOGS_SECRET`                                                         | real values; required for Discogs import                                       |
 
 `vercel.json` pins the function to `fra1`; change the region if the TiDB cluster
 is in another region. Health check: `/api/health`. Swagger: `/api/docs` is on in
